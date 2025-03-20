@@ -79,12 +79,9 @@ async def root():
 @app.post("/recognize")
 async def recognize_doodle(request: ImageRecognitionRequest):
     try:
-        print("Received image data:", request.image[:50])  # Log first 50 chars
-        
         base64_image = preprocess_image(request.image)
-
+        
         model = genai.GenerativeModel("gemini-1.5-flash")
-
         response = model.generate_content([
             "Identify the object in this doodle in a single word.",
             {
@@ -93,12 +90,15 @@ async def recognize_doodle(request: ImageRecognitionRequest):
             }
         ])
 
-        result = response.text.split()[0].strip(".,!?")
+        result = response.text.split()[0].strip(".,!?").lower()
         return {"result": result}
 
     except Exception as e:
         print(f"Error in recognition: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500, 
+            detail="Failed to recognize doodle"
+        )
 
 @app.post("/save-score")
 async def save_score(score_data: ScoreRequest):

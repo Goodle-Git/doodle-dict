@@ -54,7 +54,7 @@ export const auth = {
 };
 
 export const doodle = {
-  recognize: async (imageData: string) => {
+  recognize: async (imageData: string): Promise<string> => {
     const response = await fetch(`${API_BASE_URL}/recognize`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -77,13 +77,12 @@ export const doodle = {
       body: JSON.stringify({ username, score, total_attempts: totalAttempts }),
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
+      const data = await response.json();
       throw new Error(data.detail || 'Failed to save score');
     }
 
-    return data;
+    return true;
   },
 
   getLeaderboard: async () => {

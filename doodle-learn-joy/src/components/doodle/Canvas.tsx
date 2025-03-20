@@ -1,29 +1,51 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, ForwardedRef } from 'react';
 
-const Canvas = React.forwardRef(({ 
+interface CanvasProps {
+  tool: 'pen' | 'eraser';
+  isDrawing: boolean;
+  setIsDrawing: (drawing: boolean) => void;
+  className?: string;
+  width?: number;
+  height?: number;
+}
+
+interface Coordinates {
+  x: number;
+  y: number;
+}
+
+const Canvas = React.forwardRef<HTMLCanvasElement, CanvasProps>(({ 
   tool, 
   isDrawing,
   setIsDrawing,
-  className,
+  className = "",
   width = 800,
   height = 500 
-}, ref) => {
+}, ref: ForwardedRef<HTMLCanvasElement>) => {
+
+  // Helper function to safely get canvas element
+  const getCanvas = (): HTMLCanvasElement | null => {
+    if (!ref || typeof ref === 'function') return null;
+    return ref.current;
+  };
 
   useEffect(() => {
-    if (ref.current) {
-      const canvas = ref.current;
+    const canvas = getCanvas();
+    if (canvas) {
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
       
       const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      if (ctx) {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
     }
   }, []);
 
   useEffect(() => {
     const handleResize = () => {
-      if (ref.current) {
+      if (getCanvas()) {
         resizeCanvas();
       }
     };
@@ -33,23 +55,33 @@ const Canvas = React.forwardRef(({
   }, [tool]);
 
   const initializeCanvas = () => {
-    const canvas = ref.current;
+    const canvas = getCanvas();
+    if (!canvas) return;
+
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
     
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   };
 
   const resizeCanvas = () => {
-    const canvas = ref.current;
+    const canvas = getCanvas();
+    if (!canvas) return;
+
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = canvas.width;
     tempCanvas.height = canvas.height;
-    tempCanvas.getContext('2d').drawImage(canvas, 0, 0);
+    const tempCtx = tempCanvas.getContext('2d');
+    if (!tempCtx) return;
+
+    tempCtx.drawImage(canvas, 0, 0);
     
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
@@ -62,24 +94,27 @@ const Canvas = React.forwardRef(({
     ctx.lineWidth = tool === 'eraser' ? 20 : 3;
   };
 
-  const getCanvasCoordinates = (e) => {
-    const canvas = ref.current;
+  const getCanvasCoordinates = (event: { clientX: number; clientY: number }): Coordinates => {
+    const canvas = getCanvas();
+    if (!canvas) return { x: 0, y: 0 };
+    
     const rect = canvas.getBoundingClientRect();
     return {
-      x: (e.clientX - rect.left) * (canvas.width / rect.width),
-      y: (e.clientY - rect.top) * (canvas.height / rect.height)
+      x: (event.clientX - rect.left) * (canvas.width / rect.width),
+      y: (event.clientY - rect.top) * (canvas.height / rect.height)
     };
   };
 
-  const startDrawing = (e) => {
-    if (!ref.current) return;
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = getCanvas();
+    if (!canvas) return;
     
-    const canvas = ref.current;
     const ctx = canvas.getContext('2d');
-    const { x, y } = getCanvasCoordinates(e);
+    if (!ctx) return;
 
+    const coords = getCanvasCoordinates(e);
     ctx.beginPath();
-    ctx.moveTo(x, y);
+    ctx.moveTo(coords.x, coords.y);
 
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -95,46 +130,51 @@ const Canvas = React.forwardRef(({
     setIsDrawing(true);
   };
 
-  const draw = (e) => {
-    if (!isDrawing || !ref.current) return;
-
-    const canvas = ref.current;
+  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    
+    const canvas = getCanvas();
+    if (!canvas) return;
+    
     const ctx = canvas.getContext('2d');
-    const { x, y } = getCanvasCoordinates(e);
+    if (!ctx) return;
 
-    ctx.lineTo(x, y);
+    const coords = getCanvasCoordinates(e);
+    ctx.lineTo(coords.x, coords.y);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(x, y);
+    ctx.moveTo(coords.x, coords.y);
   };
 
   const stopDrawing = () => {
-    if (!ref.current) return;
+    const canvas = getCanvas();
+    if (!canvas) return;
     
     setIsDrawing(false);
-    const canvas = ref.current;
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
     ctx.globalCompositeOperation = 'source-over';
   };
 
-  const handleTouchStart = (e) => {
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     const touch = e.touches[0];
-    const mouseEvent = new MouseEvent('mousedown', {
+    const mouseEvent = {
       clientX: touch.clientX,
       clientY: touch.clientY
-    });
-    startDrawing(mouseEvent);
+    };
+    startDrawing(mouseEvent as any);
   };
 
-  const handleTouchMove = (e) => {
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     const touch = e.touches[0];
-    const mouseEvent = new MouseEvent('mousemove', {
+    const mouseEvent = {
       clientX: touch.clientX,
       clientY: touch.clientY
-    });
-    draw(mouseEvent);
+    };
+    draw(mouseEvent as any);
   };
 
   return (

@@ -5,13 +5,15 @@ import DrawingTools from '@/components/doodle/DrawingTools';
 import Help from '@/components/doodle/Help';
 import { Card } from '@/components/ui/card';
 import { EASY_DOODLE_CHALLENGES } from '@/lib/challenge';
-import { recognizeDoodle } from '@/services/api';
-import { toast } from 'react-toastify';
+import { toast } from "@/hooks/use-toast";
+import { doodle } from '@/services/api';
+
+type DrawingTool = 'pen' | 'eraser';
 
 const Practice = () => {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [tool, setTool] = useState('pen');
+  const [tool, setTool] = useState<DrawingTool>('pen');
   const [challenge, setChallenge] = useState('');
   const [result, setResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -44,16 +46,28 @@ const Practice = () => {
     try {
       const canvas = canvasRef.current;
       const imageData = canvas.toDataURL('image/png');
-      const result = await recognizeDoodle(imageData);
+      const result = await doodle.recognize(imageData);
       
       if (result.toLowerCase() === challenge.toLowerCase()) {
-        toast.success('Correct! Well done! 🎨');
+        toast({
+          title: "Correct! 🎨",
+          description: "Well done! Try another challenge.",
+          variant: "default",
+        });
       } else {
-        toast.error('Not quite right. Keep practicing! 🎯');
+        toast({
+          title: "Not quite right",
+          description: "Keep practicing! Try again.",
+          variant: "destructive",
+        });
       }
       setResult(result);
     } catch (error) {
-      toast.error('Error checking your drawing. Please try again.');
+      toast({
+        title: "Error",
+        description: "Failed to check your drawing. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

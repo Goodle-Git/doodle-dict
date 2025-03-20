@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { recognizeDoodle, saveScore } from '../services/api';
+import { doodle } from '@/services/api'; 
 import { EASY_DOODLE_CHALLENGES } from '@/lib/challenge';
 import { useAuth } from '@/contexts/AuthContext';
 import Canvas from '@/components/doodle/Canvas';
 import DrawingTools from '@/components/doodle/DrawingTools';
 import { Card } from '@/components/ui/card';
 import Help from '@/components/doodle/Help';
-import { useNavigate } from 'react-router-dom';  // Add this import
+import { useNavigate } from 'react-router-dom';
+import { toast } from "@/hooks/use-toast";
 
 const GAME_DURATION = 60 * 2; // 2 minute
 
@@ -92,7 +93,7 @@ export default function Game() {
     setGameState(prev => ({ ...prev, isLoading: true }));
     
     try {
-      const result = await recognizeDoodle(imageData);
+      const result = await doodle.recognize(imageData);
       setGameState(prev => ({ ...prev, attempts: prev.attempts + 1 }));
       
       if (result.toLowerCase() === gameState.currentWord.toLowerCase()) {
@@ -126,6 +127,15 @@ export default function Game() {
     }
   };
 
+  const clearCanvas = () => {
+    if (!canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  };
+
+  // Update handleCanvasGuess to use doodle service
   const handleCanvasGuess = async () => {
     if (!gameState.gameStarted || !canvasRef.current) return;
     
@@ -136,34 +146,40 @@ export default function Game() {
       const imageData = canvas.toDataURL('image/png');
       const result = await doodle.recognize(imageData);
       
-      if (result) {
-        setGameState(prev => ({ ...prev, attempts: prev.attempts + 1 }));
-        
-        if (result.toLowerCase() === gameState.currentWord.toLowerCase()) {
-          setGameState(prev => ({
-            ...prev,
-            score: prev.score + 1,
-          }));
-          toast.success('Correct! 🎨');
-        } else {
-          toast.error('Wrong! Next challenge ❌');
-        }
-        
-        // Clear canvas immediately after evaluation
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // Get new word immediately and clear feedback after short delay
-        getNewWord();
+      setGameState(prev => ({ ...prev, attempts: prev.attempts + 1 }));
+      
+      if (result.toLowerCase() === gameState.currentWord.toLowerCase()) {
+        setGameState(prev => ({
+          ...prev,
+          score: prev.score + 1,
+        }));
+        toast({
+          title: "Correct! 🎨",
+          description: "Great job! Keep going!",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Wrong! ❌",
+          description: "Try the next challenge!",
+          variant: "destructive",
+        });
       }
+      
+      clearCanvas();
+      getNewWord();
     } catch (error) {
-      toast.error('Error occurred while checking your drawing');
+      toast({
+        title: "Error",
+        description: "Failed to check your drawing",
+        variant: "destructive",
+      });
     } finally {
       setGameState(prev => ({ ...prev, isLoading: false }));
     }
   };
 
+  // Update handleGameEnd to use doodle service
   const handleGameEnd = async () => {
     setGameState(prev => ({
       ...prev,
@@ -172,10 +188,22 @@ export default function Game() {
     }));
     
     try {
-      await doodle.saveScore(gameState.username, gameState.score, gameState.attempts);
-      toast.success('Score saved successfully!');
+      await doodle.saveScore(
+        gameState.username,
+        gameState.score,
+        gameState.attempts
+      );
+      toast({
+        title: "Score Saved",
+        description: "Your score has been recorded!",
+        variant: "default",
+      });
     } catch (error) {
-      toast.error('Failed to save score');
+      toast({
+        title: "Error",
+        description: "Failed to save your score",
+        variant: "destructive",
+      });
     }
   };
 

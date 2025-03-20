@@ -1,7 +1,7 @@
 // src/pages/Leaderboard.tsx
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { getLeaderboard } from '../services/api';
+import { doodle } from '@/services/api'; 
 import DashboardNavbar from '@/components/layout/DashboardNavbar';
 
 const Leaderboard = () => {
@@ -12,7 +12,7 @@ const Leaderboard = () => {
   useEffect(() => {
     const fetchScores = async () => {
       try {
-        const response = await getLeaderboard();
+        const response = await doodle.getLeaderboard();
         setScores(response.leaderboard);
         setError(null);
       } catch (error) {
