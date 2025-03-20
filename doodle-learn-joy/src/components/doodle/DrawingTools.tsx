@@ -3,9 +3,12 @@ import { CustomButton } from '@/components/ui/custom-button';
 import { Pencil, Eraser, RotateCcw, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+// Add the DrawingTool type
+type DrawingTool = 'pen' | 'eraser';
+
 interface DrawingToolsProps {
-  tool: string;
-  onToolChange: (tool: string) => void;
+  tool: DrawingTool;
+  onToolChange: (tool: DrawingTool) => void;
   onClear: () => void;
   onSubmit: () => void;
   isLoading: boolean;
@@ -88,4 +91,5 @@ const DrawingTools = ({
   );
 };
 
+export type { DrawingTool };
 export default DrawingTools;

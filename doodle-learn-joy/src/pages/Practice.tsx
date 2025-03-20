@@ -1,14 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import DashboardNavbar from '@/components/layout/DashboardNavbar';
 import Canvas from '@/components/doodle/Canvas';
-import DrawingTools from '@/components/doodle/DrawingTools';
+import DrawingTools, { DrawingTool } from '@/components/doodle/DrawingTools';
 import Help from '@/components/doodle/Help';
 import { Card } from '@/components/ui/card';
 import { EASY_DOODLE_CHALLENGES } from '@/lib/challenge';
 import { toast } from "@/hooks/use-toast";
 import { doodle } from '@/services/api';
-
-type DrawingTool = 'pen' | 'eraser';
 
 const Practice = () => {
   const canvasRef = useRef(null);

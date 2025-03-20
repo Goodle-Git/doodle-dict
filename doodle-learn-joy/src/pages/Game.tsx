@@ -3,7 +3,7 @@ import { doodle } from '@/services/api';
 import { EASY_DOODLE_CHALLENGES } from '@/lib/challenge';
 import { useAuth } from '@/contexts/AuthContext';
 import Canvas from '@/components/doodle/Canvas';
-import DrawingTools from '@/components/doodle/DrawingTools';
+import DrawingTools, { DrawingTool } from '@/components/doodle/DrawingTools';
 import { Card } from '@/components/ui/card';
 import Help from '@/components/doodle/Help';
 import { useNavigate } from 'react-router-dom';
@@ -29,7 +29,7 @@ export default function Game() {
     feedback: '',
     feedbackType: '',
   });
-  const [tool, setTool] = useState('pen');
+  const [tool, setTool] = useState<DrawingTool>('pen');
   const [isDrawing, setIsDrawing] = useState(false);
   const canvasRef = useRef(null);
 
