@@ -2,7 +2,7 @@ import os
 import base64
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from pydantic import BaseModel
 import google.generativeai as genai
@@ -176,7 +176,21 @@ async def login(user_data: UserLogin):
             expires_delta=access_token_expires
         )
         
-        return {"access_token": access_token, "token_type": "bearer"}
+        # Get user data
+        user_info = conn.execute(
+            'SELECT username, email, name FROM users WHERE username = ?',
+            (user_data.username,)
+        ).fetchone()
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": {
+                "username": user_info[0],
+                "email": user_info[1],
+                "name": user_info[2]
+            }
+        }
         
     except HTTPException as he:
         raise he
@@ -249,6 +263,34 @@ async def forgot_password(data: PasswordReset):
     except Exception as e:
         print(f"Error in forgot password: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/verify-token")
+async def verify_token(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+            
+        # Get user data
+        conn = get_db_connection()
+        result = conn.execute(
+            'SELECT username, email, name FROM users WHERE username = ?',
+            (username,)
+        ).fetchone()
+        
+        if not result:
+            raise HTTPException(status_code=404, detail="User not found")
+            
+        return {
+            "username": result[0],
+            "email": result[1],
+            "name": result[2]
+        }
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.JWTError:
+        raise HTTPException(status_code=401, detail="Could not validate token")
 
 def create_access_token(data: dict, expires_delta: timedelta):
     to_encode = data.copy()

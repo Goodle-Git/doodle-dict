@@ -8,11 +8,11 @@ import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import { AuthProvider } from '@/contexts/AuthContext';
 import Practice from './pages/Practice';
-import Game from './pages/Game';
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Leaderboard from "./pages/Leaderboard";
+import Game from "./pages/Game";
 
 const queryClient = new QueryClient();
 

@@ -1,9 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Card } from '@/components/ui/card';
+import { CustomButton } from '@/components/ui/custom-button';
+import { Lightbulb, RefreshCw } from 'lucide-react';
 
-export default function Help({ word, isOpen, onClose }) {
-  const [images, setImages] = useState([]);
+interface HelpProps {
+  word: string;
+  className?: string;
+}
+
+const Help: React.FC<HelpProps> = ({ word, className }) => {
+  const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const generateHelpImages = async () => {
     try {
@@ -21,9 +29,7 @@ export default function Help({ word, isOpen, onClose }) {
         })
       });
 
-      console.log('Response status:', response.status);
       const data = await response.json();
-      console.log('Response data:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to generate images');
@@ -36,92 +42,87 @@ export default function Help({ word, isOpen, onClose }) {
       setImages(data.images);
     } catch (err) {
       console.error('Error generating help images:', err);
-      setError(err.message || 'Failed to load help images');
+      setError(err instanceof Error ? err.message : 'Failed to load help images');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!isOpen) return null;
+  // Generate images when word changes
+  useEffect(() => {
+    if (word) {
+      generateHelpImages();
+    }
+  }, [word]);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold">Reference Images for "{word}"</h3>
-          <button 
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+    <Card className={`p-4 border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] ${className}`}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Lightbulb className="w-5 h-5 text-doodle-yellow" />
+          <h3 className="text-lg font-bold">Drawing Help</h3>
+        </div>
+        {images.length > 0 && (
+          <CustomButton
+            size="sm"
+            className="bg-doodle-yellow hover:bg-doodle-yellow/90"
+            onClick={generateHelpImages}
           >
-            ✕
-          </button>
-        </div>
-
-        <div className="mb-4">
-          {!images.length && !loading && !error && (
-            <button
-              onClick={generateHelpImages}
-              className="btn btn-neu btn-primary w-full"
-            >
-              Generate Reference Images
-            </button>
-          )}
-          
-          {loading && (
-            <div className="text-center py-8">
-              <div className="animate-spin text-2xl mb-2">🎨</div>
-              <p>Generating images...</p>
-            </div>
-          )}
-          
-          {error && (
-            <div className="text-red-500 text-center py-4 flex flex-col gap-2">
-              <p>{error}</p>
-              <button
-                onClick={generateHelpImages}
-                className="btn btn-neu btn-primary"
-              >
-                Try Again
-              </button>
-            </div>
-          )}
-          
-          {images.length > 0 && (
-            <div className="grid grid-cols-2 gap-4">
-              {images.map((base64Image, index) => (
-                <div key={index} className="relative pt-[100%] border-2 border-gray-200 rounded-lg overflow-hidden">
-                  <img
-                    src={`data:image/png;base64,${base64Image}`}
-                    alt={`Reference ${index + 1} for ${word}`}
-                    className="absolute inset-0 w-full h-full object-contain bg-white"
-                    onError={(e) => {
-                      console.error('Image load error');
-                      e.target.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="flex justify-end gap-2">
-          {images.length > 0 && (
-            <button
-              onClick={generateHelpImages}
-              className="btn btn-neu btn-primary"
-            >
-              Generate New Images
-            </button>
-          )}
-          <button
-            onClick={onClose}
-            className="btn btn-neu btn-secondary"
-          >
-            Close
-          </button>
-        </div>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </CustomButton>
+        )}
       </div>
-    </div>
+
+      <div className="space-y-4">
+        {!images.length && !loading && !error && (
+          <CustomButton
+            className="w-full bg-doodle-yellow hover:bg-doodle-yellow/90"
+            onClick={generateHelpImages}
+          >
+            Generate Help Images
+          </CustomButton>
+        )}
+        
+        {loading && (
+          <div className="text-center py-8">
+            <div className="animate-spin text-2xl mb-2">🎨</div>
+            <p>Generating help images...</p>
+          </div>
+        )}
+        
+        {error && (
+          <div className="text-red-500 text-center py-4 flex flex-col gap-2">
+            <p>{error}</p>
+            <CustomButton
+              className="bg-doodle-yellow hover:bg-doodle-yellow/90"
+              onClick={generateHelpImages}
+            >
+              Try Again
+            </CustomButton>
+          </div>
+        )}
+        
+        {images.length > 0 && (
+          <div className="grid grid-cols-2 gap-4">
+            {images.map((base64Image, index) => (
+              <div key={index} className="relative pt-[100%] border-2 border-gray-200 rounded-lg overflow-hidden">
+                <img
+                  src={`data:image/png;base64,${base64Image}`}
+                  alt={`Reference ${index + 1} for ${word}`}
+                  className="absolute inset-0 w-full h-full object-contain bg-white"
+                  onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                    console.error('Image load error');
+                    e.currentTarget.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </Card>
   );
-}	
+};
+
+export default Help;
