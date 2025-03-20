@@ -43,6 +43,7 @@ class UserSignup(BaseModel):
     username: str
     password: str
     email: str
+    name: str
 
 class PasswordReset(BaseModel):
     email: str
@@ -156,21 +157,17 @@ async def login(user_data: UserLogin):
         ).fetchone()
         
         if not result:
-            # Create new user
-            hashed_password = pwd_context.hash(user_data.password)
-            conn.execute(
-                'INSERT INTO users (username, password) VALUES (?, ?)',
-                (user_data.username, hashed_password)
+            raise HTTPException(
+                status_code=404,
+                detail="User does not exist"
             )
-            conn.commit()
-            conn.sync()
-        else:
-            # Verify password
-            if not pwd_context.verify(user_data.password, result[0]):
-                raise HTTPException(
-                    status_code=401, 
-                    detail="Incorrect password for existing user"
-                )
+            
+        # Verify password
+        if not pwd_context.verify(user_data.password, result[0]):
+            raise HTTPException(
+                status_code=401, 
+                detail="Incorrect password for existing user"
+            )
         
         # Create access token
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -207,8 +204,8 @@ async def signup(user_data: UserSignup):
         # Create new user
         hashed_password = pwd_context.hash(user_data.password)
         conn.execute(
-            'INSERT INTO users (username, password, email) VALUES (?, ?, ?)',
-            (user_data.username, hashed_password, user_data.email)
+            'INSERT INTO users (username, password, email, name) VALUES (?, ?, ?, ?)',
+            (user_data.username, hashed_password, user_data.email, user_data.name)
         )
         conn.commit()
         conn.sync()

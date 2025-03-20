@@ -53,18 +53,20 @@ const Navbar = () => {
             <Link to="/features" className="font-bold hover:text-doodle-coral transition-colors">Features</Link>
             <Link to="/how-it-works" className="font-bold hover:text-doodle-coral transition-colors">How It Works</Link>
             <Link to="/pricing" className="font-bold hover:text-doodle-coral transition-colors">Pricing</Link>
-            <Link to="/dashboard" className="font-bold hover:text-doodle-coral transition-colors flex items-center gap-1">
-              <LayoutDashboard className="w-4 h-4" />
-              Dashboard
-            </Link>
           </div>
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
-              <Link to="/dashboard">
-                <CustomButton size="sm">Dashboard</CustomButton>
-              </Link>
+              <>
+                <Link to="/dashboard">
+                  <CustomButton 
+                  size="sm"
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                  >Dashboard</CustomButton>
+                </Link>
+                
+              </>
             ) : (
               <>
                 <Link to="/login">

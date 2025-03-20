@@ -9,6 +9,7 @@ const Signup = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -18,13 +19,14 @@ const Signup = () => {
       const response = await fetch('http://localhost:8000/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ username, email, password, name }),
       });
       
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.detail);
+        toast.error(data.detail);
+        return;
       }
       
       login(data.access_token);
@@ -40,6 +42,15 @@ const Signup = () => {
         <h2 className="text-2xl font-bold text-center mb-6">Create Account</h2>
         
         <form onSubmit={handleSignup} className="space-y-4">
+          <div>
+            <Input
+              type="text"
+              placeholder="Full Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
           <div>
             <Input
               type="text"

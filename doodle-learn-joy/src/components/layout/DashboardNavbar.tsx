@@ -19,6 +19,9 @@ const DashboardNavbar = () => {
       <div className="container mx-auto px-4">
         <nav className="flex items-center justify-between">
           <div className="flex items-center space-x-8">
+            <div className="w-10 h-10 rounded-md bg-doodle-yellow border-2 border-black flex items-center justify-center">
+              <span className="text-black text-lg">D</span>
+            </div>
             <Link to="/dashboard" className="font-bold hover:text-doodle-coral">
               Dashboard
             </Link>
@@ -32,12 +35,13 @@ const DashboardNavbar = () => {
               Leaderboard
             </Link>
           </div>
-          <Button 
-            variant="destructive" 
+          <CustomButton 
+            variant="primary"
+            className="bg-red-600 hover:bg-red-700 text-white"
             onClick={handleLogout}
           >
             Logout
-          </Button>
+          </CustomButton>
         </nav>
       </div>
     </header>
