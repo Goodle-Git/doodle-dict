@@ -67,8 +67,12 @@ const Navbar = () => {
               </Link>
             ) : (
               <>
-                <CustomButton variant="outline" size="sm">Log in</CustomButton>
-                <CustomButton size="sm">Sign up free</CustomButton>
+                <Link to="/login">
+                  <CustomButton variant="outline" size="sm">Log in</CustomButton>
+                </Link>
+                <Link to="/signup">
+                  <CustomButton size="sm">Sign up free</CustomButton>
+                </Link>
               </>
             )}
           </div>

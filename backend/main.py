@@ -39,6 +39,14 @@ class ScoreRequest(BaseModel):
     score: int
     total_attempts: int
 
+class UserSignup(BaseModel):
+    username: str
+    password: str
+    email: str
+
+class PasswordReset(BaseModel):
+    email: str
+
 SECRET_KEY = "doodleisawesome"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -177,6 +185,72 @@ async def login(user_data: UserLogin):
         raise he
     except Exception as e:
         print(f"Error in login: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/signup")
+async def signup(user_data: UserSignup):
+    try:
+        conn = get_db_connection()
+        
+        # Check if user exists
+        result = conn.execute(
+            'SELECT username FROM users WHERE username = ? OR email = ?', 
+            (user_data.username, user_data.email)
+        ).fetchone()
+        
+        if result:
+            raise HTTPException(
+                status_code=400,
+                detail="Username or email already exists"
+            )
+            
+        # Create new user
+        hashed_password = pwd_context.hash(user_data.password)
+        conn.execute(
+            'INSERT INTO users (username, password, email) VALUES (?, ?, ?)',
+            (user_data.username, hashed_password, user_data.email)
+        )
+        conn.commit()
+        conn.sync()
+        
+        # Create access token
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": user_data.username},
+            expires_delta=access_token_expires
+        )
+        
+        return {"access_token": access_token, "token_type": "bearer"}
+        
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        print(f"Error in signup: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/forgot-password")
+async def forgot_password(data: PasswordReset):
+    try:
+        conn = get_db_connection()
+        result = conn.execute(
+            'SELECT username FROM users WHERE email = ?',
+            (data.email,)
+        ).fetchone()
+        
+        if not result:
+            raise HTTPException(
+                status_code=404,
+                detail="Email not found"
+            )
+            
+        # In a real application, send password reset email here
+        # For demo, we'll just return success
+        return {"message": "Password reset instructions sent to email"}
+        
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        print(f"Error in forgot password: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 def create_access_token(data: dict, expires_delta: timedelta):
