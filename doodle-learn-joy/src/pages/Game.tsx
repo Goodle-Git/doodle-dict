@@ -6,12 +6,14 @@ import Canvas from '@/components/doodle/Canvas';
 import DrawingTools from '@/components/doodle/DrawingTools';
 import { Card } from '@/components/ui/card';
 import Help from '@/components/doodle/Help';
+import { useNavigate } from 'react-router-dom';  // Add this import
 
 const GAME_DURATION = 60 * 2; // 2 minute
 
 const { isAuthenticated } = useAuth();
 
-export default function Game({ onNavigate }) {
+export default function Game() {
+  const navigate = useNavigate();  // Add this hook
   const { user, isAuthenticated } = useAuth();
 
   const [gameState, setGameState] = useState({
@@ -32,9 +34,9 @@ export default function Game({ onNavigate }) {
 
   useEffect(() => {
     if (!user) {
-      onNavigate('practice');
+      navigate('/practice');  // Replace onNavigate with navigate
     }
-  }, [user, onNavigate]);
+  }, [user, navigate]);  // Update dependency array
 
   useEffect(() => {
     let timer;
@@ -201,7 +203,7 @@ export default function Game({ onNavigate }) {
         attempts={gameState.attempts}
         username={gameState.username}
         onRestart={startGame}
-        onViewLeaderboard={() => onNavigate('leaderboard')}
+        onViewLeaderboard={() => navigate('/leaderboard')}  // Update this line
       />
     );
   }
@@ -316,7 +318,13 @@ const GameStartScreen = ({ username, onStart }) => (
   </div>
 );
 
-const GameEndScreen = ({ score, attempts, username, onRestart, onViewLeaderboard }) => (
+const GameEndScreen = ({ score, attempts, username, onRestart, onViewLeaderboard }: {
+  score: number;
+  attempts: number;
+  username: string;
+  onRestart: () => void;
+  onViewLeaderboard: () => void;
+}) => (
   <div className="max-w-4xl mx-auto text-center">
     <div className="mb-8 p-6 neubrutalism bg-white">
       <h2 className="text-3xl font-bold mb-4">Game Over! 🎨</h2>
