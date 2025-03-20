@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function HelpModal({ word, isOpen, onClose }) {
+export default function Help({ word, isOpen, onClose }) {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
