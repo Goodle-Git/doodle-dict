@@ -102,6 +102,8 @@ const Practice = () => {
                   tool={tool}
                   isDrawing={isDrawing}
                   setIsDrawing={setIsDrawing}
+                  width={400}
+                  height={300}
                   className="w-full aspect-[4/3] bg-white rounded-lg"
                 />
               </Card>

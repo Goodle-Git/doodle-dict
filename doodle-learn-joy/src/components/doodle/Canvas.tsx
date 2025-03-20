@@ -19,8 +19,8 @@ const Canvas = React.forwardRef<HTMLCanvasElement, CanvasProps>(({
   isDrawing,
   setIsDrawing,
   className = "",
-  width = 800,
-  height = 500 
+  width = 400,
+  height = 300 
 }, ref: ForwardedRef<HTMLCanvasElement>) => {
 
   // Helper function to safely get canvas element

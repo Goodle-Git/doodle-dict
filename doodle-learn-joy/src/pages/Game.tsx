@@ -8,13 +8,15 @@ import { Card } from '@/components/ui/card';
 import Help from '@/components/doodle/Help';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "@/hooks/use-toast";
+import DashboardNavbar from '@/components/layout/DashboardNavbar';
+import { CustomButton } from '@/components/ui/custom-button';
 
 const GAME_DURATION = 60 * 2; // 2 minute
 
-const { isAuthenticated } = useAuth();
 
 export default function Game() {
-  const navigate = useNavigate();  // Add this hook
+  const navigate = useNavigate(); 
+
   const { user, isAuthenticated } = useAuth();
 
   const [gameState, setGameState] = useState({
@@ -231,47 +233,56 @@ export default function Game() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <GameStats 
-        score={gameState.score}
-        timeLeft={gameState.timeLeft}
-        attempts={gameState.attempts}
-        currentWord={gameState.currentWord}
-      />
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <DashboardNavbar />
+      <div className="container mx-auto px-4 py-8 flex-1 pt-24">
+        <div className="max-w-4xl mx-auto"> {/* Add this wrapper div */}
+          <GameStats 
+            score={gameState.score}
+            timeLeft={gameState.timeLeft}
+            attempts={gameState.attempts}
+            currentWord={gameState.currentWord}
+          />
 
-      <div className={`canvas-container neubrutalism mb-4 ${
-        isDrawing ? (tool === 'pen' ? 'drawing' : 'erasing') : ''
-      }`}>
-        <Canvas
-          ref={canvasRef}
-          tool={tool}
-          isDrawing={isDrawing}
-          setIsDrawing={setIsDrawing}
-          className="w-full h-full"
-        />
-      </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6"> {/* Add grid container */}
+            <div className="md:col-span-2"> {/* Add column wrapper */}
+              <Card className="p-4 border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+                <Canvas
+                  ref={canvasRef}
+                  tool={tool}
+                  isDrawing={isDrawing}
+                  setIsDrawing={setIsDrawing}
+                  width={400}
+                  height={300}
+                  className="w-full aspect-[4/3] bg-white rounded-lg"
+                />
+              </Card>
 
-      <DrawingTools
-        tool={tool}
-        onToolChange={setTool}
-        onClear={() => {
-          if (canvasRef.current) {
-            const ctx = canvasRef.current.getContext('2d');
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-          }
-        }}
-        onSubmit={handleCanvasGuess}
-        isLoading={gameState.isLoading}
-        submitText="Submit Guess"
-        loadingText="Checking..."
-      />
+              <div className="mt-4">
+                <DrawingTools
+                  tool={tool}
+                  onToolChange={setTool}
+                  onClear={clearCanvas}
+                  onSubmit={handleCanvasGuess}
+                  isLoading={gameState.isLoading}
+                  submitText="Submit Guess"
+                  loadingText="Checking..."
+                />
+              </div>
 
-      {gameState.feedback && (
-        <div className={`feedback ${gameState.feedbackType}`}>
-          {gameState.feedback}
+              {gameState.feedback && (
+                <Card className="mt-4 p-4 border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+                  <p className="text-xl text-center">{gameState.feedback}</p>
+                </Card>
+              )}
+            </div>
+            
+            <div className="md:col-span-1">
+              <Help word={gameState.currentWord} />
+            </div>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -311,21 +322,27 @@ const GameStats = ({ score, timeLeft, attempts, currentWord }) => {
 };
 
 const GameStartScreen = ({ username, onStart }) => (
-  <div className="max-w-4xl mx-auto text-center">
-    <div className="mb-8 p-6 neubrutalism bg-white">
-      <h2 className="text-2xl font-bold mb-4">Welcome to Doodle Challenge! 🎨</h2>
-      <div className="mb-6">
-        <p className="text-lg">
-          Ready to play, <span className="font-bold text-blue-600">{username}</span>?
-        </p>
-        <p className="text-sm text-gray-600 mt-2">
-          You have 60 seconds to draw as many doodles as you can!
-        </p>
-      </div>
-      <div className="space-y-4">
-        <button onClick={onStart} className="btn btn-neu btn-primary">
-          Start Challenge
-        </button>
+  <div className="min-h-screen flex flex-col bg-slate-50">
+    <DashboardNavbar />
+    <div className="container mx-auto px-4 py-8 flex-1 pt-24">
+      <div className="max-w-4xl mx-auto text-center">
+        <div className="p-8 border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] bg-white">
+          <h2 className="text-3xl font-bold mb-6">Welcome to Doodle Challenge! 🎨</h2>
+          <div className="mb-8">
+            <p className="text-xl mb-4">
+              Ready to play, <span className="font-bold text-doodle-coral">{username}</span>?
+            </p>
+            <p className="text-gray-600">
+              You have 2 minutes to draw as many doodles as you can!
+            </p>
+          </div>
+          <CustomButton 
+            onClick={onStart}
+            className="bg-doodle-yellow hover:bg-doodle-yellow/90 text-xl px-8 py-4"
+          >
+            Start Challenge
+          </CustomButton>
+        </div>
       </div>
     </div>
   </div>
