@@ -6,6 +6,7 @@ import Help from '@/components/doodle/Help';
 import { Card } from '@/components/ui/card';
 import { EASY_DOODLE_CHALLENGES } from '@/lib/challenge';
 import { recognizeDoodle } from '@/services/api';
+import { toast } from 'react-toastify';
 
 const Practice = () => {
   const canvasRef = useRef(null);
@@ -44,10 +45,15 @@ const Practice = () => {
       const canvas = canvasRef.current;
       const imageData = canvas.toDataURL('image/png');
       const result = await recognizeDoodle(imageData);
+      
+      if (result.toLowerCase() === challenge.toLowerCase()) {
+        toast.success('Correct! Well done! 🎨');
+      } else {
+        toast.error('Not quite right. Keep practicing! 🎯');
+      }
       setResult(result);
     } catch (error) {
-      console.error('Error:', error);
-      setResult('Error occurred. Please try again.');
+      toast.error('Error checking your drawing. Please try again.');
     } finally {
       setIsLoading(false);
     }

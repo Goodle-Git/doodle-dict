@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CustomButton } from '@/components/ui/custom-button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { auth } from '@/services/api';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -14,19 +15,9 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8000/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.detail);
-      }
-      
-      login(data.access_token);
+      const data = await auth.login(username, password);
+      login(data.access_token, data.user);
+      toast.success('Successfully logged in!');
       navigate('/dashboard');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Login failed');

@@ -134,7 +134,7 @@ export default function Game() {
       
       const canvas = canvasRef.current;
       const imageData = canvas.toDataURL('image/png');
-      const result = await recognizeDoodle(imageData);
+      const result = await doodle.recognize(imageData);
       
       if (result) {
         setGameState(prev => ({ ...prev, attempts: prev.attempts + 1 }));
@@ -143,15 +143,10 @@ export default function Game() {
           setGameState(prev => ({
             ...prev,
             score: prev.score + 1,
-            feedback: 'Correct! 🎨',
-            feedbackType: 'success'
           }));
+          toast.success('Correct! 🎨');
         } else {
-          setGameState(prev => ({
-            ...prev,
-            feedback: 'Wrong! Next challenge ❌',
-            feedbackType: 'error'
-          }));
+          toast.error('Wrong! Next challenge ❌');
         }
         
         // Clear canvas immediately after evaluation
@@ -161,20 +156,9 @@ export default function Game() {
         
         // Get new word immediately and clear feedback after short delay
         getNewWord();
-        setTimeout(() => {
-          setGameState(prev => ({ ...prev, feedback: '' }));
-        }, 1500);
       }
     } catch (error) {
-      console.error('Error:', error);
-      setGameState(prev => ({
-        ...prev,
-        feedback: 'Error occurred!',
-        feedbackType: 'error'
-      }));
-      setTimeout(() => {
-        setGameState(prev => ({ ...prev, feedback: '' }));
-      }, 500);
+      toast.error('Error occurred while checking your drawing');
     } finally {
       setGameState(prev => ({ ...prev, isLoading: false }));
     }
@@ -188,9 +172,10 @@ export default function Game() {
     }));
     
     try {
-      await saveScore(gameState.username, gameState.score, gameState.attempts);
+      await doodle.saveScore(gameState.username, gameState.score, gameState.attempts);
+      toast.success('Score saved successfully!');
     } catch (error) {
-      console.error('Error saving score:', error);
+      toast.error('Failed to save score');
     }
   };
 

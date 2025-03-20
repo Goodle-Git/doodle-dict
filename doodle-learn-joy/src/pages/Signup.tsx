@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CustomButton } from '@/components/ui/custom-button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { auth } from '@/services/api';
 
 const Signup = () => {
   const [username, setUsername] = useState('');
@@ -16,20 +17,9 @@ const Signup = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8000/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password, name }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        toast.error(data.detail);
-        return;
-      }
-      
-      login(data.access_token);
+      const data = await auth.signup({ username, email, password, name });
+      login(data.access_token, data.user);
+      toast.success('Account created successfully!');
       navigate('/dashboard');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Signup failed');

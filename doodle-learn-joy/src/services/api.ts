@@ -1,65 +1,99 @@
-import axios from 'axios';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+interface User {
+  username: string;
+  email: string;
+  name: string;
+}
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+interface AuthResponse {
+  access_token: string;
+  token_type: string;
+  user: User;
+}
 
-// Add request interceptor to include token
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+interface SignupData {
+  username: string;
+  password: string;
+  email: string;
+  name: string;
+}
 
-export const recognizeDoodle = async (imageData) => {
-  try {
-    const response = await api.post('/recognize', { image: imageData });
-    return response.data.result;
-  } catch (error) {
-    console.error('Doodle Recognition Error:', error);
-    throw error;
-  }
-};
-
-export const saveScore = async (username, score, totalAttempts) => {
-  try {
-    const response = await api.post('/save-score', {
-      username,
-      score,
-      total_attempts: totalAttempts
+export const auth = {
+  login: async (username: string, password: string): Promise<AuthResponse> => {
+    const response = await fetch(`${API_BASE_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
     });
-    return response.data;
-  } catch (error) {
-    console.error('Score Saving Error:', error);
-    throw error;
-  }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || 'Login failed');
+    }
+
+    return data;
+  },
+
+  signup: async (userData: SignupData): Promise<AuthResponse> => {
+    const response = await fetch(`${API_BASE_URL}/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || 'Signup failed');
+    }
+
+    return data;
+  },
 };
 
-export const getLeaderboard = async () => {
-  try {
-    const response = await api.get('/leaderboard');
-    return response.data;
-  } catch (error) {
-    console.error('Leaderboard Error:', error);
-    throw error;
-  }
-};
+export const doodle = {
+  recognize: async (imageData: string) => {
+    const response = await fetch(`${API_BASE_URL}/recognize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: imageData }),
+    });
 
-export const login = async (username, password) => {
-  try {
-    const response = await api.post('/login', { username, password });
-    return response.data;
-  } catch (error) {
-    console.error('Login Error:', error);
-    throw error;
-  }
-};
+    const data = await response.json();
 
-export default api;
+    if (!response.ok) {
+      throw new Error(data.detail || 'Recognition failed');
+    }
+
+    return data.result;
+  },
+
+  saveScore: async (username: string, score: number, totalAttempts: number) => {
+    const response = await fetch(`${API_BASE_URL}/save-score`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, score, total_attempts: totalAttempts }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || 'Failed to save score');
+    }
+
+    return data;
+  },
+
+  getLeaderboard: async () => {
+    const response = await fetch(`${API_BASE_URL}/leaderboard`);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || 'Failed to fetch leaderboard');
+    }
+
+    return data.leaderboard;
+  },
+};
