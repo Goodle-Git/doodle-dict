@@ -69,7 +69,7 @@ const Dashboard = () => {
           <h1 className="text-2xl font-bold">Learning Progress Dashboard</h1>
           
           <div className="flex items-center gap-2">
-            <span className="text-sm">Child:</span>
+            {/* <span className="text-sm">Child:</span>
             <select 
               value={childName}
               onChange={(e) => setChildName(e.target.value)}
@@ -78,9 +78,9 @@ const Dashboard = () => {
               <option value="Emma">Emma</option>
               <option value="Noah">Noah</option>
               <option value="Olivia">Olivia</option>
-            </select>
+            </select> */}
             
-            <span className="text-sm ml-4">Time period:</span>
+            {/* <span className="text-sm ml-4">Time period:</span>
             <select 
               value={timeframe}
               onChange={(e) => setTimeframe(e.target.value)}
@@ -90,7 +90,7 @@ const Dashboard = () => {
               <option value="month">Last month</option>
               <option value="quarter">Last 3 months</option>
               <option value="year">Last year</option>
-            </select>
+            </select> */}
           </div>
         </div>
         
