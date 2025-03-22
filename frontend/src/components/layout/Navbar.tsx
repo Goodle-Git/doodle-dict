@@ -40,10 +40,14 @@ const Navbar = () => {
             className="flex items-center space-x-2 text-2xl font-bold font-space-grotesk"
           >
             <div className="w-10 h-10 rounded-md bg-doodle-yellow border-2 border-black flex items-center justify-center">
-              <span className="text-black text-lg">D</span>
+              
+              <img src="/DoodleDict.png" alt="" />
             </div>
             <span className="hidden sm:inline-block">
-              DoodleDict
+              <div className='w-40 h-10'>
+
+              <img src="/DoodleDict-Secondary.png" alt="" />
+              </div>
             </span>
           </Link>
 
