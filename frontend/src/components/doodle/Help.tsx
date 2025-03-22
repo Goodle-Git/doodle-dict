@@ -18,7 +18,7 @@ const Help: React.FC<HelpProps> = ({ word, className }) => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('https://709f-34-55-191-208.ngrok-free.app/generate', {
+      const response = await fetch('https://79c6-34-23-182-32.ngrok-free.app/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
