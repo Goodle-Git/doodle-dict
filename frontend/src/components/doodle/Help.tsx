@@ -18,7 +18,7 @@ const Help: React.FC<HelpProps> = ({ word, className }) => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('https://79c6-34-23-182-32.ngrok-free.app/generate', {
+      const response = await fetch('https://8374-34-139-188-243.ngrok-free.app/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ const Help: React.FC<HelpProps> = ({ word, className }) => {
             className="w-full bg-doodle-yellow hover:bg-doodle-yellow/90"
             onClick={generateHelpImages}
           >
-            Generate Help Images
+            Get Help with Drawing
           </CustomButton>
         )}
         
