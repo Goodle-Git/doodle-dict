@@ -13,6 +13,7 @@ import Signup from "./pages/Signup";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Leaderboard from "./pages/Leaderboard";
 import Game from "./pages/Game";
+import Config from "./pages/Config";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Leaderboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/config"
+              element={
+                <ProtectedRoute>
+                  <Config />
                 </ProtectedRoute>
               }
             />

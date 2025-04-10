@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { CustomButton } from '@/components/ui/custom-button';
 import { Lightbulb, RefreshCw } from 'lucide-react';
 import { generateHelpImages } from '@/lib/utils';
+import { useImageGenConfig } from '@/hooks/useImageGenConfig';
 
 interface HelpProps {
   word: string;
@@ -10,6 +11,7 @@ interface HelpProps {
 }
 
 const Help: React.FC<HelpProps> = ({ word, className }) => {
+  const { useGemini } = useImageGenConfig();
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +22,7 @@ const Help: React.FC<HelpProps> = ({ word, className }) => {
       setLoading(true);
       setError(null);
       
-      const generatedImage = await generateHelpImages(word); 
+      const generatedImage = await generateHelpImages(word, useGemini);
       
       if (!generatedImage) {
         throw new Error('Failed to generate image');

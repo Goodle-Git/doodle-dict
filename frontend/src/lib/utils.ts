@@ -10,9 +10,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export async function generateHelpImages(word: string) {
+export async function generateGeminiImage(word: string) {
   try {
-    const contents = `Create a simple black and white doodle OUTLINE drawing of a ${word}. Make it over-simplified , minimal, easy to understand, and suitable for kids to draw with a pencil.`;
+    const contents = `Create a simple black and white doodle OUTLINE drawing of a ${word}. Make it over-simplified, minimal, easy to understand, and suitable for kids to draw with a pencil.`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash-exp-image-generation",
@@ -24,17 +24,51 @@ export async function generateHelpImages(word: string) {
 
     for (const part of response.candidates[0].content.parts) {
       if (part.inlineData) {
-        return part.inlineData.data; // Return base64 string directly
+        return part.inlineData.data;
       } else if (part.text) {
         console.log("Received text instead of image:", part.text);
         return null;
       }
     }
-    
-    console.log("No valid content found");
     return null;
   } catch (error) {
     console.error("Error generating image:", error);
     throw error;
   }
+}
+
+export async function generateStableDiffusionImage(word: string) {
+  try {
+    const sdUrl = localStorage.getItem('stableDiffusionUrl') || 'https://8374-34-139-188-243.ngrok-free.app/generate';
+    
+    const response = await fetch(sdUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ 
+        prompt: `Doodle outline drawing of ${word}, black and white, minimal, line drawing, simple, easy to understand and draw with a pencil for a kid.` 
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to generate images');
+    }
+
+    if (!data.images || !data.images.length) {
+      throw new Error('No images received from server');
+    }
+
+    return data.images[0]; // Return just the first image
+  } catch (error) {
+    console.error("Error generating image:", error);
+    throw error;
+  }
+}
+
+export async function generateHelpImages(word: string, useGemini: boolean) {
+  return useGemini ? generateGeminiImage(word) : generateStableDiffusionImage(word);
 }
