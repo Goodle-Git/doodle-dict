@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import jwt
 from db import get_db_connection, init_db
+from psycopg2.extras import DictCursor
 
 load_dotenv()
 # Load environment variables
@@ -104,21 +105,19 @@ async def recognize_doodle(request: ImageRecognitionRequest):
 async def save_score(score_data: ScoreRequest):
     try:
         conn = get_db_connection()
-        # Check if user exists and compare scores
-        result = conn.execute(
-            'SELECT score FROM scores WHERE username = ?',
-            (score_data.username,)
-        ).fetchone()
+        cur = conn.cursor(cursor_factory=DictCursor)
         
-        if result is None or score_data.score > result[0]:
-            conn.execute('''
-                INSERT OR REPLACE INTO scores 
-                (username, score, total_attempts) 
-                VALUES (?, ?, ?)
-            ''', (score_data.username, score_data.score, score_data.total_attempts))
-            conn.commit()
+        cur.execute('''
+            INSERT INTO scores (user_id, session_id, score, total_attempts)
+            VALUES ((SELECT id FROM users WHERE username = %s), %s, %s, %s)
+            ON CONFLICT (user_id) DO UPDATE 
+            SET score = EXCLUDED.score, total_attempts = EXCLUDED.total_attempts
+            WHERE EXCLUDED.score > scores.score
+        ''', (score_data.username, None, score_data.score, score_data.total_attempts))
         
-        conn.sync()  # Sync changes with Turso
+        conn.commit()
+        cur.close()
+        return_db_connection(conn)
         return {"message": "Score saved successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -127,21 +126,27 @@ async def save_score(score_data: ScoreRequest):
 async def get_leaderboard():
     try:
         conn = get_db_connection()
-        boards = conn.execute('SELECT username, score, total_attempts FROM scores ORDER BY score DESC LIMIT 10').fetchall()
-        print("Leaderboard data:", boards)
+        cur = conn.cursor(cursor_factory=DictCursor)
         
-        # Convert tuple results to dictionaries with explicit keys
-        scores = [
-            {
-                "username": row[0],
-                "score": row[1],
-                "total_attempts": row[2]
-            } 
-            for row in boards
-        ]
+        cur.execute('''
+            SELECT u.username, s.score, s.total_attempts 
+            FROM scores s
+            JOIN users u ON s.user_id = u.id
+            ORDER BY s.score DESC 
+            LIMIT 10
+        ''')
+        boards = cur.fetchall()
+        
+        scores = [{
+            "username": row["username"],
+            "score": row["score"],
+            "total_attempts": row["total_attempts"]
+        } for row in boards]
+        
+        cur.close()
+        return_db_connection(conn)
         return {"leaderboard": scores}
     except Exception as e:
-        print(f"Error in leaderboard: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/login")

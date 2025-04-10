@@ -1,62 +1,43 @@
 import os
-from datetime import datetime
-import libsql_experimental as libsql
+from psycopg2 import pool
 from dotenv import load_dotenv
 
 load_dotenv()
 
-def get_db_connection():
-    """
-    Get database connection
-    """
-    url = os.getenv("TURSO_DATABASE_URL")
-    auth_token = os.getenv("TURSO_AUTH_TOKEN")
-    
-    if not url or not auth_token:
-        raise ValueError("TURSO_DATABASE_URL and TURSO_AUTH_TOKEN must be set in .env file")
-    
+# Create a connection pool
+connection_pool = None
+
+def init_connection_pool():
+    global connection_pool
     try:
-        conn = libsql.connect(
-            "/tmp/doodledict.db",
-            sync_url=url,
-            auth_token=auth_token
+        connection_pool = pool.SimpleConnectionPool(
+            1,  # Minimum connections
+            20,  # Maximum connections
+            os.getenv('DATABASE_URL')
         )
-        conn.sync()
-        return conn
+        print("Database pool initialized successfully")
     except Exception as e:
-        print(f"Database connection error: {e}")
+        print(f"Error creating connection pool: {e}")
         raise
 
+def get_db_connection():
+    """Get a connection from the pool"""
+    if connection_pool is None:
+        init_connection_pool()
+    return connection_pool.getconn()
+
+def return_db_connection(conn):
+    """Return a connection to the pool"""
+    if connection_pool is not None:
+        connection_pool.putconn(conn)
+
 def init_db():
-    """
-    Initialize database tables
-    """
+    """Initialize database tables"""
     try:
         conn = get_db_connection()
-        # Create users table
-        conn.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL UNIQUE,
-            password TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        ''')
         
-        # Create scores table
-        conn.execute('''
-        CREATE TABLE IF NOT EXISTS scores (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL,
-            score INTEGER NOT NULL,
-            total_attempts INTEGER NOT NULL,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (username) REFERENCES users(username)
-        )
-        ''')
-        conn.commit()
-        conn.sync()
-        print("Turso database initialized successfully")
+        return_db_connection(conn)
+        print("Database initialized successfully")
     except Exception as e:
-        print(f"Error initializing Turso database: {e}")
+        print(f"Error initializing database: {e}")
         raise
