@@ -1,3 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Existing rules
 stable-diffusion-api/
 todo.md
 plan.md
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual Environment
+venv/
+env/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
