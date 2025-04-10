@@ -69,28 +69,6 @@ const Dashboard = () => {
           <h1 className="text-2xl font-bold">Learning Progress Dashboard</h1>
           
           <div className="flex items-center gap-2">
-            {/* <span className="text-sm">Child:</span>
-            <select 
-              value={childName}
-              onChange={(e) => setChildName(e.target.value)}
-              className="border rounded-md px-2 py-1 text-sm"
-            >
-              <option value="Emma">Emma</option>
-              <option value="Noah">Noah</option>
-              <option value="Olivia">Olivia</option>
-            </select> */}
-            
-            {/* <span className="text-sm ml-4">Time period:</span>
-            <select 
-              value={timeframe}
-              onChange={(e) => setTimeframe(e.target.value)}
-              className="border rounded-md px-2 py-1 text-sm"
-            >
-              <option value="week">Last week</option>
-              <option value="month">Last month</option>
-              <option value="quarter">Last 3 months</option>
-              <option value="year">Last year</option>
-            </select> */}
           </div>
         </div>
         
