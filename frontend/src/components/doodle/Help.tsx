@@ -25,14 +25,14 @@ const Help: React.FC<HelpProps> = ({ word, className }) => {
       const generatedImage = await generateHelpImages(word, useGemini);
       
       if (!generatedImage) {
-        throw new Error('Failed to generate image');
+        throw new Error('No image generated');
       }
 
       setImage(generatedImage);
       setHelpRequested(true);
     } catch (err) {
       console.error('Error generating help image:', err);
-      setError(err instanceof Error ? err.message : 'Failed to generate help image');
+      setError("Please wait a moment and try again...");
     } finally {
       setLoading(false);
     }
