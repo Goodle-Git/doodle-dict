@@ -75,7 +75,7 @@ SELECT
     um.total_games_played,
     um.total_attempts,
     um.successful_attempts,
-    ROUND((um.successful_attempts::FLOAT / NULLIF(um.total_attempts, 0) * 100), 2) as overall_accuracy,
+    ((um.successful_attempts::NUMERIC / NULLIF(um.total_attempts, 0) * 100))::NUMERIC(10,2) as overall_accuracy,
     um.avg_drawing_time_ms,
     um.current_level,
     um.best_score,
@@ -93,8 +93,8 @@ SELECT
     DATE_TRUNC('week', created_at) as week_start,
     COUNT(*) as total_attempts,
     SUM(CASE WHEN is_correct THEN 1 ELSE 0 END) as successful_attempts,
-    ROUND(AVG(drawing_time_ms)::numeric, 2) as avg_drawing_time,
-    ROUND((SUM(CASE WHEN is_correct THEN 1 ELSE 0 END)::FLOAT / COUNT(*) * 100), 2) as accuracy
+    (AVG(drawing_time_ms))::NUMERIC(10,2) as avg_drawing_time,
+    ((SUM(CASE WHEN is_correct THEN 1 ELSE 0 END)::NUMERIC / COUNT(*) * 100))::NUMERIC(10,2) as accuracy
 FROM drawing_attempts
 GROUP BY user_id, DATE_TRUNC('week', created_at);
 
