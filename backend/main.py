@@ -104,20 +104,16 @@ async def recognize_doodle(request: ImageRecognitionRequest):
 @app.post("/save-score")
 async def save_score(score_data: ScoreRequest):
     try:
-        conn = get_db_connection()
-        cur = conn.cursor(cursor_factory=DictCursor)
-        
-        cur.execute('''
-            INSERT INTO scores (user_id, session_id, score, total_attempts)
-            VALUES ((SELECT id FROM users WHERE username = %s), %s, %s, %s)
-            ON CONFLICT (user_id) DO UPDATE 
-            SET score = EXCLUDED.score, total_attempts = EXCLUDED.total_attempts
-            WHERE EXCLUDED.score > scores.score
-        ''', (score_data.username, None, score_data.score, score_data.total_attempts))
-        
-        conn.commit()
-        cur.close()
-        return_db_connection(conn)
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=DictCursor) as cur:
+                cur.execute('''
+                    INSERT INTO scores (user_id, session_id, score, total_attempts)
+                    VALUES ((SELECT id FROM users WHERE username = %s), %s, %s, %s)
+                    ON CONFLICT (user_id) DO UPDATE 
+                    SET score = EXCLUDED.score, total_attempts = EXCLUDED.total_attempts
+                    WHERE EXCLUDED.score > scores.score
+                ''', (score_data.username, None, score_data.score, score_data.total_attempts))
+                conn.commit()
         return {"message": "Score saved successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -125,26 +121,23 @@ async def save_score(score_data: ScoreRequest):
 @app.get("/leaderboard")
 async def get_leaderboard():
     try:
-        conn = get_db_connection()
-        cur = conn.cursor(cursor_factory=DictCursor)
-        
-        cur.execute('''
-            SELECT u.username, s.score, s.total_attempts 
-            FROM scores s
-            JOIN users u ON s.user_id = u.id
-            ORDER BY s.score DESC 
-            LIMIT 10
-        ''')
-        boards = cur.fetchall()
-        
-        scores = [{
-            "username": row["username"],
-            "score": row["score"],
-            "total_attempts": row["total_attempts"]
-        } for row in boards]
-        
-        cur.close()
-        return_db_connection(conn)
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=DictCursor) as cur:
+                cur.execute('''
+                    SELECT u.username, s.score, s.total_attempts 
+                    FROM scores s
+                    JOIN users u ON s.user_id = u.id
+                    ORDER BY s.score DESC 
+                    LIMIT 10
+                ''')
+                boards = cur.fetchall()
+                
+                scores = [{
+                    "username": row["username"],
+                    "score": row["score"],
+                    "total_attempts": row["total_attempts"]
+                } for row in boards]
+                
         return {"leaderboard": scores}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -153,49 +146,48 @@ async def get_leaderboard():
 async def login(user_data: UserLogin):
     try:
         print("Received login data:", user_data.username)
-        conn = get_db_connection()
-        
-        # Check if user exists
-        result = conn.execute(
-            'SELECT password FROM users WHERE username = ?', 
-            (user_data.username,)
-        ).fetchone()
-        
-        if not result:
-            raise HTTPException(
-                status_code=404,
-                detail="User does not exist"
+        with get_db_connection() as conn:
+            # Check if user exists
+            result = conn.execute(
+                'SELECT password FROM users WHERE username = ?', 
+                (user_data.username,)
+            ).fetchone()
+            
+            if not result:
+                raise HTTPException(
+                    status_code=404,
+                    detail="User does not exist"
+                )
+                
+            # Verify password
+            if not pwd_context.verify(user_data.password, result[0]):
+                raise HTTPException(
+                    status_code=401, 
+                    detail="Incorrect password for existing user"
+                )
+            
+            # Create access token
+            access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+            access_token = create_access_token(
+                data={"sub": user_data.username}, 
+                expires_delta=access_token_expires
             )
             
-        # Verify password
-        if not pwd_context.verify(user_data.password, result[0]):
-            raise HTTPException(
-                status_code=401, 
-                detail="Incorrect password for existing user"
-            )
-        
-        # Create access token
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = create_access_token(
-            data={"sub": user_data.username}, 
-            expires_delta=access_token_expires
-        )
-        
-        # Get user data
-        user_info = conn.execute(
-            'SELECT username, email, name FROM users WHERE username = ?',
-            (user_data.username,)
-        ).fetchone()
-        
-        return {
-            "access_token": access_token,
-            "token_type": "bearer",
-            "user": {
-                "username": user_info[0],
-                "email": user_info[1],
-                "name": user_info[2]
+            # Get user data
+            user_info = conn.execute(
+                'SELECT username, email, name FROM users WHERE username = ?',
+                (user_data.username,)
+            ).fetchone()
+            
+            return {
+                "access_token": access_token,
+                "token_type": "bearer",
+                "user": {
+                    "username": user_info[0],
+                    "email": user_info[1],
+                    "name": user_info[2]
+                }
             }
-        }
         
     except HTTPException as he:
         raise he
@@ -206,37 +198,36 @@ async def login(user_data: UserLogin):
 @app.post("/signup")
 async def signup(user_data: UserSignup):
     try:
-        conn = get_db_connection()
-        
-        # Check if user exists
-        result = conn.execute(
-            'SELECT username FROM users WHERE username = ? OR email = ?', 
-            (user_data.username, user_data.email)
-        ).fetchone()
-        
-        if result:
-            raise HTTPException(
-                status_code=400,
-                detail="Username or email already exists"
+        with get_db_connection() as conn:
+            # Check if user exists
+            result = conn.execute(
+                'SELECT username FROM users WHERE username = ? OR email = ?', 
+                (user_data.username, user_data.email)
+            ).fetchone()
+            
+            if result:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Username or email already exists"
+                )
+                
+            # Create new user
+            hashed_password = pwd_context.hash(user_data.password)
+            conn.execute(
+                'INSERT INTO users (username, password, email, name) VALUES (?, ?, ?, ?)',
+                (user_data.username, hashed_password, user_data.email, user_data.name)
+            )
+            conn.commit()
+            conn.sync()
+            
+            # Create access token
+            access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+            access_token = create_access_token(
+                data={"sub": user_data.username},
+                expires_delta=access_token_expires
             )
             
-        # Create new user
-        hashed_password = pwd_context.hash(user_data.password)
-        conn.execute(
-            'INSERT INTO users (username, password, email, name) VALUES (?, ?, ?, ?)',
-            (user_data.username, hashed_password, user_data.email, user_data.name)
-        )
-        conn.commit()
-        conn.sync()
-        
-        # Create access token
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = create_access_token(
-            data={"sub": user_data.username},
-            expires_delta=access_token_expires
-        )
-        
-        return {"access_token": access_token, "token_type": "bearer"}
+            return {"access_token": access_token, "token_type": "bearer"}
         
     except HTTPException as he:
         raise he
@@ -247,21 +238,21 @@ async def signup(user_data: UserSignup):
 @app.post("/forgot-password")
 async def forgot_password(data: PasswordReset):
     try:
-        conn = get_db_connection()
-        result = conn.execute(
-            'SELECT username FROM users WHERE email = ?',
-            (data.email,)
-        ).fetchone()
-        
-        if not result:
-            raise HTTPException(
-                status_code=404,
-                detail="Email not found"
-            )
+        with get_db_connection() as conn:
+            result = conn.execute(
+                'SELECT username FROM users WHERE email = ?',
+                (data.email,)
+            ).fetchone()
             
-        # In a real application, send password reset email here
-        # For demo, we'll just return success
-        return {"message": "Password reset instructions sent to email"}
+            if not result:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Email not found"
+                )
+                
+            # In a real application, send password reset email here
+            # For demo, we'll just return success
+            return {"message": "Password reset instructions sent to email"}
         
     except HTTPException as he:
         raise he
@@ -278,15 +269,15 @@ async def verify_token(token: str = Depends(oauth2_scheme)):
             raise HTTPException(status_code=401, detail="Invalid token")
             
         # Get user data
-        conn = get_db_connection()
-        result = conn.execute(
-            'SELECT username, email, name FROM users WHERE username = ?',
-            (username,)
-        ).fetchone()
-        
-        if not result:
-            raise HTTPException(status_code=404, detail="User not found")
+        with get_db_connection() as conn:
+            result = conn.execute(
+                'SELECT username, email, name FROM users WHERE username = ?',
+                (username,)
+            ).fetchone()
             
+            if not result:
+                raise HTTPException(status_code=404, detail="User not found")
+                
         return {
             "username": result[0],
             "email": result[1],

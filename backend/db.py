@@ -1,6 +1,7 @@
 import os
 from psycopg2 import pool
 from dotenv import load_dotenv
+from contextlib import contextmanager
 
 load_dotenv()
 
@@ -20,24 +21,37 @@ def init_connection_pool():
         print(f"Error creating connection pool: {e}")
         raise
 
+@contextmanager
 def get_db_connection():
-    """Get a connection from the pool"""
+    """Get a database connection from the pool"""
     if connection_pool is None:
         init_connection_pool()
-    return connection_pool.getconn()
-
-def return_db_connection(conn):
-    """Return a connection to the pool"""
-    if connection_pool is not None:
+    
+    conn = connection_pool.getconn()
+    try:
+        yield conn
+    finally:
         connection_pool.putconn(conn)
+
+def close_all_connections():
+    """Close all database connections"""
+    if connection_pool is not None:
+        connection_pool.closeall()
 
 def init_db():
     """Initialize database tables"""
     try:
-        conn = get_db_connection()
-        
-        return_db_connection(conn)
-        print("Database initialized successfully")
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                # Execute schema.sql content here
+                with open('db/schema.sql', 'r') as schema_file:
+                    cur.execute(schema_file.read())
+                conn.commit()
+                print("Database initialized successfully")
     except Exception as e:
         print(f"Error initializing database: {e}")
         raise
+
+# Clean up on module unload
+import atexit
+atexit.register(close_all_connections)
