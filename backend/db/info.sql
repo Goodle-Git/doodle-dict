@@ -39,6 +39,27 @@ ORDER BY
     tablename,
     indexname;
 
+-- Detailed table information
+SELECT 
+    c.table_schema,
+    c.table_name,
+    c.column_name,
+    c.data_type,
+    c.column_default,
+    c.is_nullable,
+    c.character_maximum_length,
+    tc.constraint_type,
+    kcu.referenced_table_name,
+    kcu.referenced_column_name
+FROM information_schema.columns c
+LEFT JOIN information_schema.key_column_usage kcu
+    ON c.column_name = kcu.column_name 
+    AND c.table_name = kcu.table_name
+LEFT JOIN information_schema.table_constraints tc
+    ON kcu.constraint_name = tc.constraint_name
+WHERE c.table_name = 'your_table_name'  -- Replace with table name
+ORDER BY c.ordinal_position;
+
 -- Quick data inspection queries
 -- Users
 SELECT * FROM users LIMIT 5;
