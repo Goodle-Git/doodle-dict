@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { doodle } from '@/services/api'; 
-import { EASY_DOODLE_CHALLENGES } from '@/lib/challenge';
+import { DOODLE_CHALLENGES } from '@/lib/challenge';
 import { useAuth } from '@/contexts/AuthContext';
 import Canvas from '@/components/doodle/Canvas';
 import DrawingTools, { DrawingTool } from '@/components/doodle/DrawingTools';
@@ -12,7 +12,7 @@ import DashboardNavbar from '@/components/layout/DashboardNavbar';
 import { CustomButton } from '@/components/ui/custom-button';
 
 const GAME_DURATION = 60 * 2; // 2 minute
-
+const EASY_DOODLE_CHALLENGES = DOODLE_CHALLENGES.EASY;
 
 export default function Game() {
   const navigate = useNavigate(); 

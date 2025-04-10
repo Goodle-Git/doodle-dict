@@ -1,4 +1,7 @@
--- Users table with expanded profile information
+-- Core tables
+CREATE TYPE difficulty_level AS ENUM ('EASY', 'MEDIUM', 'HARD');
+
+-- Users table
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
@@ -8,139 +11,143 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Game sessions to track each play session
+-- Game sessions with enhanced tracking
 CREATE TABLE IF NOT EXISTS game_sessions (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     end_time TIMESTAMP,
     total_time_seconds INTEGER,
-    difficulty_level VARCHAR(20),
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    difficulty difficulty_level NOT NULL,
+    total_score INTEGER DEFAULT 0,
+    total_attempts INTEGER DEFAULT 0,
+    successful_attempts INTEGER DEFAULT 0,
+    avg_drawing_time_ms INTEGER DEFAULT 0,
+    streak_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Individual drawing attempts
+-- Drawing attempts with detailed metrics
 CREATE TABLE IF NOT EXISTS drawing_attempts (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    session_id INTEGER REFERENCES game_sessions(id),
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    session_id INTEGER REFERENCES game_sessions(id) ON DELETE CASCADE,
     word_prompt VARCHAR(100) NOT NULL,
+    difficulty difficulty_level NOT NULL,
     is_correct BOOLEAN NOT NULL,
-    time_taken_seconds INTEGER NOT NULL,
-    difficulty_level VARCHAR(20) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_session FOREIGN KEY (session_id) REFERENCES game_sessions(id) ON DELETE CASCADE
+    drawing_time_ms INTEGER NOT NULL,
+    recognition_accuracy FLOAT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- User statistics for dashboard
-CREATE TABLE IF NOT EXISTS user_stats (
+-- User performance metrics (aggregated stats)
+CREATE TABLE IF NOT EXISTS user_metrics (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) UNIQUE,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE UNIQUE,
     total_games_played INTEGER DEFAULT 0,
     total_attempts INTEGER DEFAULT 0,
     successful_attempts INTEGER DEFAULT 0,
     total_time_spent_seconds INTEGER DEFAULT 0,
     current_level INTEGER DEFAULT 1,
     experience_points INTEGER DEFAULT 0,
-    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    best_score INTEGER DEFAULT 0,
+    fastest_correct_ms INTEGER,
+    highest_streak INTEGER DEFAULT 0,
+    easy_accuracy FLOAT DEFAULT 0,
+    medium_accuracy FLOAT DEFAULT 0,
+    hard_accuracy FLOAT DEFAULT 0,
+    avg_drawing_time_ms INTEGER DEFAULT 0,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Weekly progress tracking
-CREATE TABLE IF NOT EXISTS weekly_progress (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    week_start_date DATE NOT NULL,
-    accuracy_score INTEGER DEFAULT 0,
-    avg_speed_seconds FLOAT DEFAULT 0,
-    total_attempts INTEGER DEFAULT 0,
-    successful_attempts INTEGER DEFAULT 0,
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE(user_id, week_start_date)
-);
+-- Indexes for performance
+CREATE INDEX idx_attempts_user ON drawing_attempts(user_id);
+CREATE INDEX idx_attempts_session ON drawing_attempts(session_id);
+CREATE INDEX idx_sessions_user ON game_sessions(user_id);
+CREATE INDEX idx_attempts_difficulty ON drawing_attempts(difficulty);
+CREATE INDEX idx_attempts_created ON drawing_attempts(created_at);
 
--- Scores table (modified to link with sessions)
-CREATE TABLE IF NOT EXISTS scores (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    session_id INTEGER REFERENCES game_sessions(id),
-    score INTEGER NOT NULL,
-    total_attempts INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_session FOREIGN KEY (session_id) REFERENCES game_sessions(id) ON DELETE CASCADE
-);
+-- Views for dashboard queries
+CREATE OR REPLACE VIEW user_progress_view AS
+SELECT 
+    u.id as user_id,
+    u.username,
+    um.total_games_played,
+    um.total_attempts,
+    um.successful_attempts,
+    ROUND((um.successful_attempts::FLOAT / NULLIF(um.total_attempts, 0) * 100), 2) as overall_accuracy,
+    um.avg_drawing_time_ms,
+    um.current_level,
+    um.best_score,
+    um.highest_streak,
+    um.easy_accuracy,
+    um.medium_accuracy,
+    um.hard_accuracy
+FROM users u
+LEFT JOIN user_metrics um ON u.id = um.user_id;
 
--- Add difficulty_levels enum
-CREATE TYPE difficulty_level AS ENUM ('EASY', 'MEDIUM', 'HARD');
+-- Weekly progress view
+CREATE OR REPLACE VIEW weekly_progress_view AS
+SELECT 
+    user_id,
+    DATE_TRUNC('week', created_at) as week_start,
+    COUNT(*) as total_attempts,
+    SUM(CASE WHEN is_correct THEN 1 ELSE 0 END) as successful_attempts,
+    ROUND(AVG(drawing_time_ms)::numeric, 2) as avg_drawing_time,
+    ROUND((SUM(CASE WHEN is_correct THEN 1 ELSE 0 END)::FLOAT / COUNT(*) * 100), 2) as accuracy
+FROM drawing_attempts
+GROUP BY user_id, DATE_TRUNC('week', created_at);
 
--- Update drawing_attempts table
-ALTER TABLE drawing_attempts ADD COLUMN IF NOT EXISTS difficulty difficulty_level NOT NULL;
-ALTER TABLE drawing_attempts ADD COLUMN IF NOT EXISTS drawing_time_ms INTEGER NOT NULL;
-ALTER TABLE drawing_attempts ADD COLUMN IF NOT EXISTS recognition_accuracy FLOAT;
-
--- Add streaks table
-CREATE TABLE IF NOT EXISTS user_streaks (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    streak_count INTEGER NOT NULL,
-    start_date TIMESTAMP NOT NULL,
-    end_date TIMESTAMP,
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- Add difficulty_stats table
-CREATE TABLE IF NOT EXISTS user_difficulty_stats (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    difficulty difficulty_level NOT NULL,
-    total_attempts INTEGER DEFAULT 0,
-    successful_attempts INTEGER DEFAULT 0,
-    fastest_time_ms INTEGER,
-    average_time_ms INTEGER DEFAULT 0,
-    average_accuracy FLOAT DEFAULT 0,
-    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE(user_id, difficulty)
-);
-
--- Update user_stats table
-ALTER TABLE user_stats 
-ADD COLUMN IF NOT EXISTS best_quiz_score INTEGER DEFAULT 0,
-ADD COLUMN IF NOT EXISTS fastest_correct_ms INTEGER,
-ADD COLUMN IF NOT EXISTS highest_streak INTEGER DEFAULT 0,
-ADD COLUMN IF NOT EXISTS average_drawing_time_ms INTEGER DEFAULT 0;
-
--- Create indexes for better query performance
-CREATE INDEX idx_drawing_attempts_user ON drawing_attempts(user_id);
-CREATE INDEX idx_drawing_attempts_session ON drawing_attempts(session_id);
-CREATE INDEX idx_scores_user ON scores(user_id);
-CREATE INDEX idx_weekly_progress_user ON weekly_progress(user_id);
-CREATE INDEX idx_weekly_progress_date ON weekly_progress(week_start_date);
-CREATE INDEX idx_game_sessions_user ON game_sessions(user_id);
-CREATE INDEX idx_drawing_attempts_difficulty ON drawing_attempts(difficulty);
-CREATE INDEX idx_drawing_attempts_user_difficulty ON drawing_attempts(user_id, difficulty);
-CREATE INDEX idx_user_streaks_user ON user_streaks(user_id);
-
--- Add trigger to update user_stats on new drawing attempts
-CREATE OR REPLACE FUNCTION update_user_stats()
+-- Trigger to update user metrics
+CREATE OR REPLACE FUNCTION update_user_metrics()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO user_stats (user_id, total_attempts, successful_attempts)
-    VALUES (NEW.user_id, 1, CASE WHEN NEW.is_correct THEN 1 ELSE 0 END)
-    ON CONFLICT (user_id)
-    DO UPDATE SET
-        total_attempts = user_stats.total_attempts + 1,
-        successful_attempts = user_stats.successful_attempts + CASE WHEN NEW.is_correct THEN 1 ELSE 0 END,
+    -- Update user metrics
+    INSERT INTO user_metrics (
+        user_id,
+        total_attempts,
+        successful_attempts,
+        avg_drawing_time_ms
+    )
+    VALUES (
+        NEW.user_id,
+        1,
+        CASE WHEN NEW.is_correct THEN 1 ELSE 0 END,
+        NEW.drawing_time_ms
+    )
+    ON CONFLICT (user_id) DO UPDATE SET
+        total_attempts = user_metrics.total_attempts + 1,
+        successful_attempts = user_metrics.successful_attempts + 
+            CASE WHEN NEW.is_correct THEN 1 ELSE 0 END,
+        avg_drawing_time_ms = (
+            (user_metrics.avg_drawing_time_ms * user_metrics.total_attempts + NEW.drawing_time_ms) / 
+            (user_metrics.total_attempts + 1)
+        ),
         last_updated = CURRENT_TIMESTAMP;
+
+    -- Update difficulty-specific accuracy
+    IF NEW.is_correct THEN
+        CASE NEW.difficulty
+            WHEN 'EASY' THEN
+                UPDATE user_metrics 
+                SET easy_accuracy = (easy_accuracy + NEW.recognition_accuracy) / 2
+                WHERE user_id = NEW.user_id;
+            WHEN 'MEDIUM' THEN
+                UPDATE user_metrics 
+                SET medium_accuracy = (medium_accuracy + NEW.recognition_accuracy) / 2
+                WHERE user_id = NEW.user_id;
+            WHEN 'HARD' THEN
+                UPDATE user_metrics 
+                SET hard_accuracy = (hard_accuracy + NEW.recognition_accuracy) / 2
+                WHERE user_id = NEW.user_id;
+        END CASE;
+    END IF;
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_update_user_stats
+CREATE TRIGGER trg_update_user_metrics
 AFTER INSERT ON drawing_attempts
 FOR EACH ROW
-EXECUTE FUNCTION update_user_stats();
+EXECUTE FUNCTION update_user_metrics();
