@@ -72,6 +72,48 @@ CREATE TABLE IF NOT EXISTS scores (
     CONSTRAINT fk_session FOREIGN KEY (session_id) REFERENCES game_sessions(id) ON DELETE CASCADE
 );
 
+-- Add difficulty_levels enum
+CREATE TYPE difficulty_level AS ENUM ('EASY', 'MEDIUM', 'HARD');
+
+-- Update drawing_attempts table
+ALTER TABLE drawing_attempts ADD COLUMN IF NOT EXISTS difficulty difficulty_level NOT NULL;
+ALTER TABLE drawing_attempts ADD COLUMN IF NOT EXISTS drawing_time_ms INTEGER NOT NULL;
+ALTER TABLE drawing_attempts ADD COLUMN IF NOT EXISTS recognition_accuracy FLOAT;
+
+-- Add streaks table
+CREATE TABLE IF NOT EXISTS user_streaks (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    streak_count INTEGER NOT NULL,
+    start_date TIMESTAMP NOT NULL,
+    end_date TIMESTAMP,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Add difficulty_stats table
+CREATE TABLE IF NOT EXISTS user_difficulty_stats (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    difficulty difficulty_level NOT NULL,
+    total_attempts INTEGER DEFAULT 0,
+    successful_attempts INTEGER DEFAULT 0,
+    fastest_time_ms INTEGER,
+    average_time_ms INTEGER DEFAULT 0,
+    average_accuracy FLOAT DEFAULT 0,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(user_id, difficulty)
+);
+
+-- Update user_stats table
+ALTER TABLE user_stats 
+ADD COLUMN IF NOT EXISTS best_quiz_score INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS fastest_correct_ms INTEGER,
+ADD COLUMN IF NOT EXISTS highest_streak INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS average_drawing_time_ms INTEGER DEFAULT 0;
+
 -- Create indexes for better query performance
 CREATE INDEX idx_drawing_attempts_user ON drawing_attempts(user_id);
 CREATE INDEX idx_drawing_attempts_session ON drawing_attempts(session_id);
@@ -79,6 +121,9 @@ CREATE INDEX idx_scores_user ON scores(user_id);
 CREATE INDEX idx_weekly_progress_user ON weekly_progress(user_id);
 CREATE INDEX idx_weekly_progress_date ON weekly_progress(week_start_date);
 CREATE INDEX idx_game_sessions_user ON game_sessions(user_id);
+CREATE INDEX idx_drawing_attempts_difficulty ON drawing_attempts(difficulty);
+CREATE INDEX idx_drawing_attempts_user_difficulty ON drawing_attempts(user_id, difficulty);
+CREATE INDEX idx_user_streaks_user ON user_streaks(user_id);
 
 -- Add trigger to update user_stats on new drawing attempts
 CREATE OR REPLACE FUNCTION update_user_stats()
