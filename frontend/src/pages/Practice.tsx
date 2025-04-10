@@ -127,7 +127,7 @@ const Practice = () => {
             </div>
 
             <div className="md:col-span-1">
-              <Help word={challenge} />
+              <Help word={challenge} className="sticky top-24" />
             </div>
           </div>
         </div>

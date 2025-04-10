@@ -278,7 +278,7 @@ export default function Game() {
             </div>
             
             <div className="md:col-span-1">
-              <Help word={gameState.currentWord} />
+              <Help word={gameState.currentWord} className="sticky top-24" />
             </div>
           </div>
         </div>

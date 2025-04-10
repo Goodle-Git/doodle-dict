@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { CustomButton } from '@/components/ui/custom-button';
 import { Lightbulb, RefreshCw } from 'lucide-react';
+import { generateHelpImages } from '@/lib/utils';
 
 interface HelpProps {
   word: string;
@@ -9,51 +10,31 @@ interface HelpProps {
 }
 
 const Help: React.FC<HelpProps> = ({ word, className }) => {
-  const [images, setImages] = useState<string[]>([]);
+  const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [helpRequested, setHelpRequested] = useState(false);
 
-  const generateHelpImages = async () => {
+  const handleGenerateImage = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('https://8374-34-139-188-243.ngrok-free.app/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ 
-          prompt: `Doodle outline drawing of ${word}, black and white, minimal, line drawing, simple, easy to understand and draw with a pencil for a kid.` 
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate images');
+      const generatedImage = await generateHelpImages(word); 
+      
+      if (!generatedImage) {
+        throw new Error('Failed to generate image');
       }
 
-      if (!data.images || !data.images.length) {
-        throw new Error('No images received from server');
-      }
-
-      setImages(data.images);
+      setImage(generatedImage);
+      setHelpRequested(true);
     } catch (err) {
-      console.error('Error generating help images:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load help images');
+      console.error('Error generating help image:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate help image');
     } finally {
       setLoading(false);
     }
   };
-
-  // Generate images when word changes
-  useEffect(() => {
-    if (word) {
-      generateHelpImages();
-    }
-  }, [word]);
 
   return (
     <Card className={`p-4 border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] ${className}`}>
@@ -62,11 +43,11 @@ const Help: React.FC<HelpProps> = ({ word, className }) => {
           <Lightbulb className="w-5 h-5 text-doodle-yellow" />
           <h3 className="text-lg font-bold">Drawing Help</h3>
         </div>
-        {images.length > 0 && (
+        {helpRequested && image && (
           <CustomButton
             size="sm"
             className="bg-doodle-yellow hover:bg-doodle-yellow/90"
-            onClick={generateHelpImages}
+            onClick={handleGenerateImage}
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
@@ -75,19 +56,20 @@ const Help: React.FC<HelpProps> = ({ word, className }) => {
       </div>
 
       <div className="space-y-4">
-        {!images.length && !loading && !error && (
+        {!helpRequested && !loading && (
           <CustomButton
             className="w-full bg-doodle-yellow hover:bg-doodle-yellow/90"
-            onClick={generateHelpImages}
+            onClick={handleGenerateImage}
           >
-            Get Help with Drawing
+            <Lightbulb className="w-4 h-4 mr-2" />
+            Help me draw this!
           </CustomButton>
         )}
         
         {loading && (
           <div className="text-center py-8">
             <div className="animate-spin text-2xl mb-2">🎨</div>
-            <p>Generating help images...</p>
+            <p>Generating help image...</p>
           </div>
         )}
         
@@ -96,28 +78,24 @@ const Help: React.FC<HelpProps> = ({ word, className }) => {
             <p>{error}</p>
             <CustomButton
               className="bg-doodle-yellow hover:bg-doodle-yellow/90"
-              onClick={generateHelpImages}
+              onClick={handleGenerateImage}
             >
               Try Again
             </CustomButton>
           </div>
         )}
         
-        {images.length > 0 && (
-          <div className="grid grid-cols-2 gap-4">
-            {images.map((base64Image, index) => (
-              <div key={index} className="relative pt-[100%] border-2 border-gray-200 rounded-lg overflow-hidden">
-                <img
-                  src={`data:image/png;base64,${base64Image}`}
-                  alt={`Reference ${index + 1} for ${word}`}
-                  className="absolute inset-0 w-full h-full object-contain bg-white"
-                  onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                    console.error('Image load error');
-                    e.currentTarget.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-                  }}
-                />
-              </div>
-            ))}
+        {helpRequested && image && (
+          <div className="border-2 border-gray-200 rounded-lg overflow-hidden">
+            <img
+              src={`data:image/png;base64,${image}`}
+              alt={`Reference for ${word}`}
+              className="w-full h-auto object-contain bg-white"
+              onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                console.error('Image load error');
+                e.currentTarget.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+              }}
+            />
           </div>
         )}
       </div>
