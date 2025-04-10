@@ -1,10 +1,21 @@
-from pydantic_settings import BaseSettings
+from pydantic import BaseModel
+from functools import lru_cache
+from typing import Optional
+import os
+from dotenv import load_dotenv
 
-class Settings(BaseSettings):
-    DATABASE_URL: str
-    SECRET_KEY: str
+load_dotenv()
 
-    class Config:
-        env_file = ".env"
+class Settings(BaseModel):
+    PROJECT_NAME: str = "Doodle Learn Joy"
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "doodleisawesome")
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY")
 
-settings = Settings()
+@lru_cache()
+def get_settings() -> Settings:
+    return Settings()
+
+settings = get_settings()
