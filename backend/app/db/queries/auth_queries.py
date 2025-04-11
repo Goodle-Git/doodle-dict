@@ -35,3 +35,20 @@ async def create_new_user(user_data: dict):
             ))
             conn.commit()
             return cur.fetchone()[0]
+
+async def blacklist_token(token: str):
+    query = """
+        INSERT INTO token_blacklist (token, blacklisted_on)
+        VALUES (%s, NOW())
+    """
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query, (token,))
+            conn.commit()
+
+async def is_token_blacklisted(token: str) -> bool:
+    query = "SELECT EXISTS(SELECT 1 FROM token_blacklist WHERE token = %s)"
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query, (token,))
+            return cur.fetchone()[0]

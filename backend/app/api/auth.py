@@ -5,7 +5,8 @@ from app.services.auth import (
     authenticate_user,
     create_user,
     handle_password_reset,
-    verify_token
+    verify_token,
+    invalidate_token
 )
 
 router = APIRouter()
@@ -36,5 +37,12 @@ async def forgot_password(data: PasswordReset):
 async def verify_token_endpoint(token: str = Depends(oauth2_scheme)):
     try:
         return await verify_token(token)
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=str(e))
+
+@router.post("/logout")
+async def logout_endpoint(token: str = Depends(oauth2_scheme)):
+    try:
+        return await invalidate_token(token)
     except Exception as e:
         raise HTTPException(status_code=401, detail=str(e))

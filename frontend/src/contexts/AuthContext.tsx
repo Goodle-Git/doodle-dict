@@ -1,5 +1,6 @@
 // src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { auth } from '../services/api';
 
 interface User {
   username: string;
@@ -35,18 +36,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!token) return;
       
       try {
-        const response = await fetch('http://localhost:8000/verify-token', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (!response.ok) {
-          // Token is invalid or expired
-          handleLogout();
-        }
+        const userData = await auth.verifyToken(token);
+        setUser(userData);
       } catch (error) {
         console.error('Token verification failed:', error);
+        handleLogout();
       }
     };
 
@@ -65,7 +59,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated(true);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      if (token) {
+        await auth.logout(token);
+      }
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+    // Always clean up local state, even if server logout fails
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setToken(null);

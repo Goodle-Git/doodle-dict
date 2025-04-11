@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from fastapi import HTTPException
 from app.core.config import settings
 from app.core.security import verify_password, get_password_hash, create_access_token
-from app.db.queries.auth_queries import get_user, create_new_user, get_user_by_email
+from app.db.queries.auth_queries import get_user, create_new_user, get_user_by_email, blacklist_token, is_token_blacklisted
 
 async def authenticate_user(user_data):
     user = await get_user(user_data.username)
@@ -60,6 +60,10 @@ async def verify_token(token: str):
     from jose import JWTError, jwt
     
     try:
+        # Check if token is blacklisted
+        if await is_token_blacklisted(token):
+            raise HTTPException(status_code=401, detail="Token has been invalidated")
+            
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         username = payload.get("sub")
         if not username:
@@ -76,3 +80,13 @@ async def verify_token(token: str):
         }
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+async def invalidate_token(token: str):
+    try:
+        # First verify the token
+        user_data = await verify_token(token)
+        # If verification passes, blacklist the token
+        await blacklist_token(token)
+        return {"message": "Successfully logged out"}
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=str(e))

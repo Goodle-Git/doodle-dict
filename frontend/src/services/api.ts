@@ -51,6 +51,44 @@ export const auth = {
 
     return data;
   },
+
+  verifyToken: async (token: string): Promise<User> => {
+    const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || 'Token verification failed');
+    }
+
+    return data;
+  },
+
+  logout: async (token: string): Promise<void> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || 'Logout failed');
+      }
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Still proceed with local logout even if server logout fails
+      throw error;
+    }
+  },
 };
 
 export const doodle = {
