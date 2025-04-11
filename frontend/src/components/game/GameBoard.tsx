@@ -6,6 +6,7 @@ import Help from '../doodle/Help';
 import { useGame } from '@/contexts/GameContext';
 import { game } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
+import { AnimatedToast } from '@/components/ui/animated-toast';
 
 export const GameBoard = () => {
   const { state, handleAttempt, startDrawing, setCurrentWord } = useGame();
@@ -38,16 +39,28 @@ export const GameBoard = () => {
       const imageData = canvas.toDataURL('image/png');
       const result = await game.recognize(imageData);
       
+      const isCorrect = result.toLowerCase() === state.currentWord.toLowerCase();
       await handleAttempt(result, 1.0);
       
       toast({
-        title: result.toLowerCase() === state.currentWord.toLowerCase() ? "Correct! 🎨" : "Wrong! ❌",
-        description: "Keep going!",
-        variant: result.toLowerCase() === state.currentWord.toLowerCase() ? "default" : "destructive",
+        title: isCorrect ? "Correct! 🎨" : "Wrong! ❌",
+        description: isCorrect ? "Great job! Next challenge!" : "Keep trying! You have time!",
+        variant: isCorrect ? "success" : "destructive",
+        children: isCorrect && (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <video
+              autoPlay
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+            >
+              <source src="/confetti.webm" type="video/webm" />
+            </video>
+          </div>
+        ),
       });
       
       clearCanvas();
-      setCurrentWord();
     } catch (error) {
       toast({
         title: "Error",

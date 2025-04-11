@@ -1,10 +1,12 @@
-import React, { createContext, useContext, useState } from 'react';
-import { DOODLE_CHALLENGES } from '@/lib/challenge';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getRandomChallenge } from '@/lib/challenge';
 import { game } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 
 const GAME_DURATION = 60 * 2; // 2 minutes
-const EASY_DOODLE_CHALLENGES = DOODLE_CHALLENGES.EASY;
+const CHALLENGE_TIME = 30; // 30 seconds per challenge
+const MAX_CHALLENGES = 15; // 15 challenges per game
+const TOTAL_GAME_TIME = CHALLENGE_TIME * MAX_CHALLENGES; // 450 seconds total
 
 interface GameState {
   username: string;
@@ -24,6 +26,12 @@ interface GameState {
   };
   sessionId: number | null;
   drawingStartTime: number | null;
+  currentChallenge: {
+    word: string;
+    difficulty: string;
+  } | null;
+  challengeTimeLeft: number;
+  challengesCompleted: number;
 }
 
 interface GameContextType {
@@ -58,7 +66,46 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     },
     sessionId: null,
     drawingStartTime: null,
+    currentChallenge: null,
+    challengeTimeLeft: CHALLENGE_TIME,
+    challengesCompleted: 0,
   });
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    if (state.gameStarted && !state.gameEnded && state.challengeTimeLeft > 0) {
+      timer = setInterval(() => {
+        setState(prev => {
+          if (prev.challengeTimeLeft <= 1) {
+            // Time's up for current challenge, move to next one
+            const nextChallenge = getRandomChallenge();
+            return {
+              ...prev,
+              challengeTimeLeft: CHALLENGE_TIME,
+              currentChallenge: nextChallenge,
+              currentWord: nextChallenge.word,
+              timeLeft: prev.timeLeft - 1,
+            };
+          }
+          return {
+            ...prev,
+            challengeTimeLeft: prev.challengeTimeLeft - 1,
+            timeLeft: prev.timeLeft - 1,
+          };
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(timer);
+  }, [state.gameStarted, state.gameEnded, state.challengeTimeLeft]);
+
+  useEffect(() => {
+    if (state.gameStarted && 
+        (state.challengesCompleted >= MAX_CHALLENGES || state.timeLeft <= 0)) {
+      endGame();
+    }
+  }, [state.challengesCompleted, state.timeLeft]);
 
   const startGame = async (username: string) => {
     try {
@@ -69,7 +116,9 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         sessionId,
         score: 0,
         attempts: 0,
-        timeLeft: GAME_DURATION,
+        timeLeft: TOTAL_GAME_TIME,
+        challengeTimeLeft: CHALLENGE_TIME,
+        challengesCompleted: 0,
         gameStarted: true,
         gameEnded: false,
         stats: {
@@ -121,10 +170,12 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const setCurrentWord = () => {
-    const randomWord = EASY_DOODLE_CHALLENGES[
-      Math.floor(Math.random() * EASY_DOODLE_CHALLENGES.length)
-    ];
-    setState(prev => ({ ...prev, currentWord: randomWord }));
+    const challenge = getRandomChallenge();
+    setState(prev => ({ 
+      ...prev, 
+      currentChallenge: challenge,
+      currentWord: challenge.word 
+    }));
   };
 
   const resetGame = () => {
@@ -147,15 +198,18 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const handleAttempt = async (result: string, accuracy: number) => {
-    if (!state.sessionId || !state.drawingStartTime) return;
+    if (!state.sessionId || !state.drawingStartTime || !state.currentChallenge) return;
 
     const drawingTime = Date.now() - state.drawingStartTime;
     const isCorrect = result.toLowerCase() === state.currentWord.toLowerCase();
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
 
     try {
       await game.trackAttempt({
         sessionId: state.sessionId,
+        userId: userData.id,
         wordPrompt: state.currentWord,
+        difficulty: state.currentChallenge.difficulty,
         isCorrect,
         drawingTimeMs: drawingTime,
         recognitionAccuracy: accuracy,
@@ -165,6 +219,16 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     updateScore(isCorrect);
+
+    // Only proceed to next challenge if correct
+    if (isCorrect) {
+      setState(prev => ({
+        ...prev,
+        challengesCompleted: prev.challengesCompleted + 1,
+        challengeTimeLeft: CHALLENGE_TIME, // Reset challenge timer
+      }));
+      setCurrentWord(); // Get next challenge
+    }
   };
 
   return (

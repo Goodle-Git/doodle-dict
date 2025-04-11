@@ -21,6 +21,7 @@ async def authenticate_user(user_data):
         "access_token": access_token,
         "token_type": "bearer",
         "user": {
+            "id": user["id"],  # Add user id to response
             "username": user["username"],
             "email": user["email"],
             "name": user["name"]

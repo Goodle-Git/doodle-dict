@@ -26,6 +26,7 @@ class GameSessionComplete(BaseModel):
 
 class DrawingAttempt(BaseModel):
     session_id: int
+    user_id: int  # Add user_id field
     word_prompt: str
     difficulty: DifficultyLevel  # This stays as each word has its own difficulty
     is_correct: bool

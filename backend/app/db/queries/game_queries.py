@@ -1,37 +1,56 @@
 from app.db.connection import get_db_connection
-from app.schemas.game import DrawingAttempt, GameSession, GameScore
+from app.schemas.game import DrawingAttempt, GameSession, GameScore, GameSessionComplete
 
 async def create_game_session(session_data: GameSession) -> int:
     query = """
-        INSERT INTO game_sessions (user_id, difficulty)
-        VALUES (%s, %s)
+        INSERT INTO game_sessions (user_id)
+        VALUES (%s)
         RETURNING id
     """
     with get_db_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute(query, (
-                session_data.user_id,
-                session_data.difficulty
-            ))
+            cur.execute(query, (session_data.user_id,))
             conn.commit()
             return cur.fetchone()[0]
 
 async def save_drawing_attempt(attempt: DrawingAttempt) -> int:
     query = """
         INSERT INTO drawing_attempts 
-        (session_id, word_prompt, difficulty, is_correct, drawing_time_ms, recognition_accuracy)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        (session_id, user_id, word_prompt, difficulty, is_correct, drawing_time_ms, recognition_accuracy)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         RETURNING id
     """
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(query, (
                 attempt.session_id,
+                attempt.user_id,
                 attempt.word_prompt,
                 attempt.difficulty,
                 attempt.is_correct,
                 attempt.drawing_time_ms,
                 attempt.recognition_accuracy
+            ))
+            conn.commit()
+            return cur.fetchone()[0]
+
+async def complete_game_session(session_id: int, data: GameSessionComplete) -> int:
+    query = """
+        UPDATE game_sessions 
+        SET end_time = NOW(),
+            total_score = %s,
+            total_attempts = %s,
+            total_time_seconds = %s
+        WHERE id = %s
+        RETURNING id
+    """
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query, (
+                data.total_score,
+                data.total_attempts,
+                data.total_time_seconds,
+                session_id
             ))
             conn.commit()
             return cur.fetchone()[0]

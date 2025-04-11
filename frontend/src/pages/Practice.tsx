@@ -8,7 +8,7 @@ import { DOODLE_CHALLENGES } from '@/lib/challenge';
 import { toast } from "@/hooks/use-toast";
 import { game } from '@/services/api';
 
-const EASY_DOODLE_CHALLENGES = DOODLE_CHALLENGES.EASY;
+const EASY_DOODLE_CHALLENGES = DOODLE_CHALLENGES;
 
 const Practice = () => {
   const canvasRef = useRef(null);
@@ -52,7 +52,7 @@ const Practice = () => {
         toast({
           title: "Correct! 🎨",
           description: "Well done! Try another challenge.",
-          variant: "default",
+          variant: "success",
         });
       } else {
         toast({

@@ -1,6 +1,7 @@
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 interface User {
+  id: number;
   username: string;
   email: string;
   name: string;
@@ -143,9 +144,19 @@ export const game = {
   },
 
   startSession: async (): Promise<number> => {
+    // Get user from localStorage instead of just user_id
+    const user = localStorage.getItem('user');
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+    const userData = JSON.parse(user);
+
     const response = await appFetch(`${API_BASE_URL}/game/session`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: userData.id // Make sure user object includes id
+      })
     });
 
     const data = await response.json();
@@ -156,8 +167,34 @@ export const game = {
     return data.session_id;
   },
 
+  completeSession: async (sessionData: {
+    sessionId: number;
+    totalScore: number;
+    totalAttempts: number;
+    totalTimeSeconds: number;
+  }) => {
+    const response = await appFetch(`${API_BASE_URL}/game/session/${sessionData.sessionId}/complete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: sessionData.sessionId,
+        total_score: sessionData.totalScore,
+        total_attempts: sessionData.totalAttempts,
+        total_time_seconds: sessionData.totalTimeSeconds
+      }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.detail || 'Failed to complete session');
+    }
+
+    return true;
+  },
+
   trackAttempt: async (attemptData: {
     sessionId: number;
+    userId: number;  // Add userId
     wordPrompt: string;
     isCorrect: boolean;
     drawingTimeMs: number;
@@ -169,6 +206,7 @@ export const game = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         session_id: attemptData.sessionId,
+        user_id: attemptData.userId,  // Include userId
         word_prompt: attemptData.wordPrompt,
         difficulty: attemptData.difficulty,
         is_correct: attemptData.isCorrect,
