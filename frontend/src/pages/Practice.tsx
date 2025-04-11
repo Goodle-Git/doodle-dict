@@ -4,9 +4,11 @@ import Canvas from '@/components/doodle/Canvas';
 import DrawingTools, { DrawingTool } from '@/components/doodle/DrawingTools';
 import Help from '@/components/doodle/Help';
 import { Card } from '@/components/ui/card';
-import { EASY_DOODLE_CHALLENGES } from '@/lib/challenge';
+import { DOODLE_CHALLENGES } from '@/lib/challenge';
 import { toast } from "@/hooks/use-toast";
 import { doodle } from '@/services/api';
+
+const EASY_DOODLE_CHALLENGES = DOODLE_CHALLENGES.EASY;
 
 const Practice = () => {
   const canvasRef = useRef(null);

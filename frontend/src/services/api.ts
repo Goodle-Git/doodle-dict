@@ -21,7 +21,7 @@ interface SignupData {
 
 export const auth = {
   login: async (username: string, password: string): Promise<AuthResponse> => {
-    const response = await fetch(`${API_BASE_URL}/login`, {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
@@ -37,7 +37,7 @@ export const auth = {
   },
 
   signup: async (userData: SignupData): Promise<AuthResponse> => {
-    const response = await fetch(`${API_BASE_URL}/signup`, {
+    const response = await fetch(`${API_BASE_URL}/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData),
