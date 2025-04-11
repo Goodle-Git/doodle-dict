@@ -141,4 +141,47 @@ export const game = {
 
     return data.leaderboard;
   },
+
+  startSession: async (): Promise<number> => {
+    const response = await appFetch(`${API_BASE_URL}/game/session`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || 'Failed to start game session');
+    }
+
+    return data.session_id;
+  },
+
+  trackAttempt: async (attemptData: {
+    sessionId: number;
+    wordPrompt: string;
+    isCorrect: boolean;
+    drawingTimeMs: number;
+    recognitionAccuracy: number;
+    difficulty: string;
+  }) => {
+    const response = await appFetch(`${API_BASE_URL}/game/attempt`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: attemptData.sessionId,
+        word_prompt: attemptData.wordPrompt,
+        difficulty: attemptData.difficulty,
+        is_correct: attemptData.isCorrect,
+        drawing_time_ms: attemptData.drawingTimeMs,
+        recognition_accuracy: attemptData.recognitionAccuracy,
+      }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.detail || 'Failed to track attempt');
+    }
+
+    return true;
+  },
 };

@@ -1,19 +1,26 @@
-export const DOODLE_CHALLENGES = {
-  EASY: [
-    'circle', 'square', 'star', 'heart', 'sun', 'moon', 'cloud',
-    'flower', 'tree', 'house', 'cup', 'hat', 'book', 'chair',
-    // Add more easy challenges here
-  ],
-  MEDIUM: [
-    'bicycle', 'cat', 'dog', 'bird', 'fish', 'car', 'boat',
-    'airplane', 'clock', 'glasses', 'camera', 'phone',
-    // Add more medium challenges here
-  ],
-  HARD: [
-    'elephant', 'giraffe', 'kangaroo', 'helicopter', 'motorcycle',
-    'submarine', 'castle', 'dragon', 'robot', 'spaceship',
-    // Add more hard challenges here
-  ]
-};
+interface Challenge {
+  word: string;
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+}
+
+export const DOODLE_CHALLENGES: Challenge[] = [
+  // Easy challenges
+  { word: 'circle', difficulty: 'EASY' },
+  { word: 'square', difficulty: 'EASY' },
+  { word: 'star', difficulty: 'EASY' },
+  { word: 'heart', difficulty: 'EASY' },
+  // Medium challenges
+  { word: 'bicycle', difficulty: 'MEDIUM' },
+  { word: 'cat', difficulty: 'MEDIUM' },
+  { word: 'dog', difficulty: 'MEDIUM' },
+  // Hard challenges
+  { word: 'elephant', difficulty: 'HARD' },
+  { word: 'giraffe', difficulty: 'HARD' },
+  { word: 'castle', difficulty: 'HARD' },
+];
 
 export type DifficultyLevel = 'EASY' | 'MEDIUM' | 'HARD';
+
+export const getRandomChallenge = (): Challenge => {
+  return DOODLE_CHALLENGES[Math.floor(Math.random() * DOODLE_CHALLENGES.length)];
+};

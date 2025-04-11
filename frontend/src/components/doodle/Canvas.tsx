@@ -7,6 +7,7 @@ interface CanvasProps {
   className?: string;
   width?: number;
   height?: number;
+  onDrawStart?: () => void;
 }
 
 interface Coordinates {
@@ -18,6 +19,7 @@ const Canvas = React.forwardRef<HTMLCanvasElement, CanvasProps>(({
   tool, 
   isDrawing,
   setIsDrawing,
+  onDrawStart,
   className = "",
   width = 400,
   height = 300 
@@ -108,6 +110,8 @@ const Canvas = React.forwardRef<HTMLCanvasElement, CanvasProps>(({
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = getCanvas();
     if (!canvas) return;
+    
+    onDrawStart?.();  // Call the onDrawStart callback
     
     const ctx = canvas.getContext('2d');
     if (!ctx) return;

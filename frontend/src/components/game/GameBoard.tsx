@@ -8,7 +8,7 @@ import { game } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 
 export const GameBoard = () => {
-  const { state, updateScore, setCurrentWord } = useGame();
+  const { state, handleAttempt, startDrawing, setCurrentWord } = useGame();
   const [tool, setTool] = useState<DrawingTool>('pen');
   const [isDrawing, setIsDrawing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,6 +23,11 @@ export const GameBoard = () => {
     }
   };
 
+  const handleCanvasStart = () => {
+    startDrawing();
+    setIsDrawing(true);
+  };
+
   const handleCanvasGuess = async () => {
     if (!state.gameStarted || !canvasRef.current) return;
     
@@ -33,13 +38,12 @@ export const GameBoard = () => {
       const imageData = canvas.toDataURL('image/png');
       const result = await game.recognize(imageData);
       
-      const correct = result.toLowerCase() === state.currentWord.toLowerCase();
-      updateScore(correct);
+      await handleAttempt(result, 1.0);
       
       toast({
-        title: correct ? "Correct! 🎨" : "Wrong! ❌",
-        description: correct ? "Great job! Keep going!" : "Try the next challenge!",
-        variant: correct ? "default" : "destructive",
+        title: result.toLowerCase() === state.currentWord.toLowerCase() ? "Correct! 🎨" : "Wrong! ❌",
+        description: "Keep going!",
+        variant: result.toLowerCase() === state.currentWord.toLowerCase() ? "default" : "destructive",
       });
       
       clearCanvas();
@@ -64,6 +68,7 @@ export const GameBoard = () => {
             tool={tool}
             isDrawing={isDrawing}
             setIsDrawing={setIsDrawing}
+            onDrawStart={handleCanvasStart}
             width={400}
             height={300}
             className="w-full aspect-[4/3] bg-white rounded-lg"

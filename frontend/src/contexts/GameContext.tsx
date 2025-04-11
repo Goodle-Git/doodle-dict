@@ -22,6 +22,8 @@ interface GameState {
     timePerAttempt: number[];
     wordHistory: string[];
   };
+  sessionId: number | null;
+  drawingStartTime: number | null;
 }
 
 interface GameContextType {
@@ -31,6 +33,8 @@ interface GameContextType {
   updateScore: (correct: boolean) => void;
   setCurrentWord: () => void;
   resetGame: () => void;
+  startDrawing: () => void;
+  handleAttempt: (result: string, accuracy: number) => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -51,25 +55,38 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       correctGuesses: [],
       timePerAttempt: [],
       wordHistory: [],
-    }
+    },
+    sessionId: null,
+    drawingStartTime: null,
   });
 
-  const startGame = (username: string) => {
-    setState({
-      ...state,
-      username,
-      score: 0,
-      attempts: 0,
-      timeLeft: GAME_DURATION,
-      gameStarted: true,
-      gameEnded: false,
-      stats: {
-        correctGuesses: [],
-        timePerAttempt: [],
-        wordHistory: [],
-      }
-    });
-    setCurrentWord();
+  const startGame = async (username: string) => {
+    try {
+      const sessionId = await game.startSession();
+      setState({
+        ...state,
+        username,
+        sessionId,
+        score: 0,
+        attempts: 0,
+        timeLeft: GAME_DURATION,
+        gameStarted: true,
+        gameEnded: false,
+        stats: {
+          correctGuesses: [],
+          timePerAttempt: [],
+          wordHistory: [],
+        }
+      });
+      setCurrentWord();
+    } catch (error) {
+      console.error('Failed to start game session:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start game",
+        variant: "destructive",
+      });
+    }
   };
 
   const endGame = async () => {
@@ -122,6 +139,34 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     });
   };
 
+  const startDrawing = () => {
+    setState(prev => ({
+      ...prev,
+      drawingStartTime: Date.now(),
+    }));
+  };
+
+  const handleAttempt = async (result: string, accuracy: number) => {
+    if (!state.sessionId || !state.drawingStartTime) return;
+
+    const drawingTime = Date.now() - state.drawingStartTime;
+    const isCorrect = result.toLowerCase() === state.currentWord.toLowerCase();
+
+    try {
+      await game.trackAttempt({
+        sessionId: state.sessionId,
+        wordPrompt: state.currentWord,
+        isCorrect,
+        drawingTimeMs: drawingTime,
+        recognitionAccuracy: accuracy,
+      });
+    } catch (error) {
+      console.error('Failed to track attempt:', error);
+    }
+
+    updateScore(isCorrect);
+  };
+
   return (
     <GameContext.Provider value={{
       state,
@@ -129,7 +174,9 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       endGame,
       updateScore,
       setCurrentWord,
-      resetGame
+      resetGame,
+      startDrawing,
+      handleAttempt,
     }}>
       {children}
     </GameContext.Provider>

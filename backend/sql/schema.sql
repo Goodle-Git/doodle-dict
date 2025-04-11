@@ -18,7 +18,6 @@ CREATE TABLE IF NOT EXISTS game_sessions (
     start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     end_time TIMESTAMP,
     total_time_seconds INTEGER,
-    difficulty difficulty_level NOT NULL,
     total_score INTEGER DEFAULT 0,
     total_attempts INTEGER DEFAULT 0,
     successful_attempts INTEGER DEFAULT 0,
