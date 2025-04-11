@@ -6,7 +6,7 @@ import Help from '@/components/doodle/Help';
 import { Card } from '@/components/ui/card';
 import { DOODLE_CHALLENGES } from '@/lib/challenge';
 import { toast } from "@/hooks/use-toast";
-import { doodle } from '@/services/api';
+import { game } from '@/services/api';
 
 const EASY_DOODLE_CHALLENGES = DOODLE_CHALLENGES.EASY;
 
@@ -46,7 +46,7 @@ const Practice = () => {
     try {
       const canvas = canvasRef.current;
       const imageData = canvas.toDataURL('image/png');
-      const result = await doodle.recognize(imageData);
+      const result = await game.recognize(imageData);
       
       if (result.toLowerCase() === challenge.toLowerCase()) {
         toast({

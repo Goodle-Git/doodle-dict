@@ -19,9 +19,21 @@ interface SignupData {
   name: string;
 }
 
+const appFetch = async (url: string, init?: RequestInit) => {
+  const token = localStorage.getItem('token');
+  const config: RequestInit = {
+    ...init,
+    headers: {
+      ...init?.headers,
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    }
+  };
+  return fetch(url, config);
+};
+
 export const auth = {
   login: async (username: string, password: string): Promise<AuthResponse> => {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    const response = await appFetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
@@ -37,7 +49,7 @@ export const auth = {
   },
 
   signup: async (userData: SignupData): Promise<AuthResponse> => {
-    const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+    const response = await appFetch(`${API_BASE_URL}/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData),
@@ -53,11 +65,10 @@ export const auth = {
   },
 
   verifyToken: async (token: string): Promise<User> => {
-    const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+    const response = await appFetch(`${API_BASE_URL}/auth/verify`, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Content-Type': 'application/json'
       },
     });
 
@@ -72,11 +83,8 @@ export const auth = {
 
   logout: async (token: string): Promise<void> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await appFetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST'
       });
 
       if (!response.ok) {
@@ -91,9 +99,9 @@ export const auth = {
   },
 };
 
-export const doodle = {
+export const game = {
   recognize: async (imageData: string): Promise<string> => {
-    const response = await fetch(`${API_BASE_URL}/recognize`, {
+    const response = await appFetch(`${API_BASE_URL}/game/recognize`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image: imageData }),
@@ -109,7 +117,7 @@ export const doodle = {
   },
 
   saveScore: async (username: string, score: number, totalAttempts: number) => {
-    const response = await fetch(`${API_BASE_URL}/save-score`, {
+    const response = await appFetch(`${API_BASE_URL}/game/save-score`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, score, total_attempts: totalAttempts }),
@@ -124,7 +132,7 @@ export const doodle = {
   },
 
   getLeaderboard: async () => {
-    const response = await fetch(`${API_BASE_URL}/leaderboard`);
+    const response = await appFetch(`${API_BASE_URL}/leaderboard`);
     const data = await response.json();
 
     if (!response.ok) {

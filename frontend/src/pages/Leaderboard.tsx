@@ -1,6 +1,6 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { doodle } from '@/services/api';
+import { game } from '@/services/api';
 import DashboardNavbar from '@/components/layout/DashboardNavbar';
 
 interface Score {
@@ -17,7 +17,7 @@ const Leaderboard = () => {
   useEffect(() => {
     const fetchScores = async () => {
       try {
-        const data = await doodle.getLeaderboard();
+        const data = await game.getLeaderboard();
         setScores(data || []); // Ensure we always have an array
         setError(null);
       } catch (error) {

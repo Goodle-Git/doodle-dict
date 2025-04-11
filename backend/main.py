@@ -27,7 +27,7 @@ app.add_middleware(
 # Include routers
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(users.router, prefix="/users", tags=["Users"])
-# app.include_router(game.router, prefix="/game", tags=["Game"])
+app.include_router(game.router, prefix="/game", tags=["Game"])
 # app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
 
 if __name__ == "__main__":

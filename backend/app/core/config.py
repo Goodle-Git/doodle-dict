@@ -12,7 +12,7 @@ class Settings(BaseModel):
     SECRET_KEY: str = os.getenv("SECRET_KEY", "doodleisawesome")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY")
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY")
 
 @lru_cache()
 def get_settings() -> Settings:

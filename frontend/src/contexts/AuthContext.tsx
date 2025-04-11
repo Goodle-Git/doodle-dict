@@ -75,33 +75,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated(false);
   };
 
-  // Add token to all API requests
-  useEffect(() => {
-    const interceptor = (config: RequestInit): RequestInit => {
-      if (token) {
-        return {
-          ...config,
-          headers: {
-            ...config.headers,
-            'Authorization': `Bearer ${token}`
-          }
-        };
-      }
-      return config;
-    };
-
-    // Add interceptor to global fetch
-    const originalFetch = window.fetch;
-    window.fetch = async (input: RequestInfo, init?: RequestInit) => {
-      const config = interceptor(init || {});
-      return originalFetch(input, config);
-    };
-
-    return () => {
-      window.fetch = originalFetch;
-    };
-  }, [token]);
-
   return (
     <AuthContext.Provider value={{
       isAuthenticated,

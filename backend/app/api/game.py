@@ -11,6 +11,7 @@ async def recognize_doodle_api(request: ImageRecognitionRequest):
         result = await recognize_doodle(request.image)
         return {"result": result}
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/save-score")

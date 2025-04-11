@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { doodle } from '@/services/api'; 
+import { game } from '@/services/api'; 
 import { DOODLE_CHALLENGES } from '@/lib/challenge';
 import { useAuth } from '@/contexts/AuthContext';
 import Canvas from '@/components/doodle/Canvas';
@@ -37,9 +37,9 @@ export default function Game() {
 
   useEffect(() => {
     if (!user) {
-      navigate('/practice');  // Replace onNavigate with navigate
+      navigate('/practice');
     }
-  }, [user, navigate]);  // Update dependency array
+  }, [user, navigate]); 
 
   useEffect(() => {
     let timer;
@@ -95,7 +95,7 @@ export default function Game() {
     setGameState(prev => ({ ...prev, isLoading: true }));
     
     try {
-      const result = await doodle.recognize(imageData);
+      const result = await game.recognize(imageData);
       setGameState(prev => ({ ...prev, attempts: prev.attempts + 1 }));
       
       if (result.toLowerCase() === gameState.currentWord.toLowerCase()) {
@@ -146,7 +146,7 @@ export default function Game() {
       
       const canvas = canvasRef.current;
       const imageData = canvas.toDataURL('image/png');
-      const result = await doodle.recognize(imageData);
+      const result = await game.recognize(imageData);
       
       setGameState(prev => ({ ...prev, attempts: prev.attempts + 1 }));
       
@@ -190,7 +190,7 @@ export default function Game() {
     }));
     
     try {
-      await doodle.saveScore(
+      await game.saveScore(
         gameState.username,
         gameState.score,
         gameState.attempts
@@ -206,6 +206,15 @@ export default function Game() {
         description: "Failed to save your score",
         variant: "destructive",
       });
+    } finally {
+
+      setGameState(prev => ({
+        ...prev,
+        score: 0,
+        attempts: 0,
+        gameStarted: false,
+        gameEnded: true,
+      }));
     }
   };
 
