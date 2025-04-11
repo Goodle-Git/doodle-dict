@@ -6,7 +6,6 @@ import Help from '../doodle/Help';
 import { useGame } from '@/contexts/GameContext';
 import { game } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
-import { AnimatedToast } from '@/components/ui/animated-toast';
 
 export const GameBoard = () => {
   const { state, handleAttempt, startDrawing, setCurrentWord } = useGame();
@@ -46,18 +45,6 @@ export const GameBoard = () => {
         title: isCorrect ? "Correct! 🎨" : "Wrong! ❌",
         description: isCorrect ? "Great job! Next challenge!" : "Keep trying! You have time!",
         variant: isCorrect ? "success" : "destructive",
-        children: isCorrect && (
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <video
-              autoPlay
-              muted
-              playsInline
-              className="w-full h-full object-cover"
-            >
-              <source src="/confetti.webm" type="video/webm" />
-            </video>
-          </div>
-        ),
       });
       
       clearCanvas();

@@ -35,25 +35,40 @@ async def save_drawing_attempt(attempt: DrawingAttempt) -> int:
             return cur.fetchone()[0]
 
 async def complete_game_session(session_id: int, data: GameSessionComplete) -> int:
-    query = """
+    # First, get session details for metrics
+    update_query = """
         UPDATE game_sessions 
         SET end_time = NOW(),
             total_score = %s,
             total_attempts = %s,
-            total_time_seconds = %s
+            total_time_seconds = %s,
+            successful_attempts = (
+                SELECT COUNT(*) 
+                FROM drawing_attempts 
+                WHERE session_id = %s AND is_correct = true
+            ),
+            avg_drawing_time_ms = (
+                SELECT AVG(drawing_time_ms) 
+                FROM drawing_attempts 
+                WHERE session_id = %s
+            )
         WHERE id = %s
-        RETURNING id
+        RETURNING user_id;
     """
+    
     with get_db_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute(query, (
+            cur.execute(update_query, (
                 data.total_score,
                 data.total_attempts,
                 data.total_time_seconds,
+                session_id,
+                session_id,
                 session_id
             ))
+            result = cur.fetchone()
             conn.commit()
-            return cur.fetchone()[0]
+            return result[0] if result else None
 
 async def save_game_score(score: GameScore) -> int:
     # First get user_id from username

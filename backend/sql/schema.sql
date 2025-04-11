@@ -100,19 +100,43 @@ GROUP BY user_id, DATE_TRUNC('week', created_at);
 -- Trigger to update user metrics
 CREATE OR REPLACE FUNCTION update_user_metrics()
 RETURNS TRIGGER AS $$
+DECLARE
+    current_streak integer;
+    max_streak integer;
 BEGIN
+    -- Get current streak from session
+    SELECT COUNT(*) INTO current_streak
+    FROM drawing_attempts a
+    WHERE a.session_id = NEW.session_id
+    AND a.is_correct = true
+    AND a.created_at >= (
+        SELECT MAX(created_at)
+        FROM drawing_attempts
+        WHERE session_id = NEW.session_id
+        AND is_correct = false
+    );
+
+    -- Get max streak
+    SELECT GREATEST(highest_streak, current_streak) INTO max_streak
+    FROM user_metrics
+    WHERE user_id = NEW.user_id;
+
     -- Update user metrics
     INSERT INTO user_metrics (
         user_id,
         total_attempts,
         successful_attempts,
-        avg_drawing_time_ms
+        avg_drawing_time_ms,
+        fastest_correct_ms,
+        highest_streak
     )
     VALUES (
         NEW.user_id,
         1,
         CASE WHEN NEW.is_correct THEN 1 ELSE 0 END,
-        NEW.drawing_time_ms
+        NEW.drawing_time_ms,
+        CASE WHEN NEW.is_correct THEN NEW.drawing_time_ms ELSE NULL END,
+        max_streak
     )
     ON CONFLICT (user_id) DO UPDATE SET
         total_attempts = user_metrics.total_attempts + 1,
@@ -122,6 +146,15 @@ BEGIN
             (user_metrics.avg_drawing_time_ms * user_metrics.total_attempts + NEW.drawing_time_ms) / 
             (user_metrics.total_attempts + 1)
         ),
+        fastest_correct_ms = CASE 
+            WHEN NEW.is_correct THEN
+                LEAST(
+                    COALESCE(user_metrics.fastest_correct_ms, NEW.drawing_time_ms),
+                    NEW.drawing_time_ms
+                )
+            ELSE user_metrics.fastest_correct_ms
+        END,
+        highest_streak = GREATEST(user_metrics.highest_streak, max_streak),
         last_updated = CURRENT_TIMESTAMP;
 
     -- Update difficulty-specific accuracy

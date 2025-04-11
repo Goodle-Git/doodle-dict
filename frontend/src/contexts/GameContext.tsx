@@ -140,15 +140,28 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
 
   const endGame = async () => {
     try {
-      await game.saveScore(state.username, state.score, state.attempts);
-      toast({
-        title: "Score Saved",
-        description: "Your score has been recorded!",
-      });
+      if (state.sessionId) {
+        // First complete the session with all metrics
+        await game.completeSession({
+          sessionId: state.sessionId,
+          totalScore: state.score,
+          totalAttempts: state.attempts,
+          totalTimeSeconds: TOTAL_GAME_TIME - state.timeLeft
+        });
+
+        // Then save the general score
+        await game.saveScore(state.username, state.score, state.attempts);
+        
+        toast({
+          title: "Game Complete!",
+          description: "Your score and stats have been recorded!",
+          variant: "success",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to save your score",
+        description: "Failed to save your game data",
         variant: "destructive",
       });
     }
