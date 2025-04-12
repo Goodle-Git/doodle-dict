@@ -11,25 +11,24 @@ logger = logging.getLogger(__name__)
 def truncate_data():
     # Order matters due to foreign key constraints
     truncate_commands = [
-        """TRUNCATE TABLE drawing_attempts CASCADE;""",
-        """TRUNCATE TABLE game_sessions CASCADE;""",
-        """TRUNCATE TABLE user_metrics CASCADE;""",
-        """TRUNCATE TABLE token_blacklist CASCADE;""",
-        """TRUNCATE TABLE users CASCADE;"""  # This will cascade to all dependent tables
+        """DELETE FROM drawing_attempts;""",
+        """DELETE FROM game_sessions;""",
+        """DELETE FROM user_metrics;""",
+        """DELETE FROM token_blacklist;""",
+        """DELETE FROM users;""",  # This will cascade to all dependent tables
+        """ALTER SEQUENCE users_id_seq RESTART WITH 1;""",
+        """ALTER SEQUENCE game_sessions_id_seq RESTART WITH 1;""",
+        """ALTER SEQUENCE drawing_attempts_id_seq RESTART WITH 1;""",
+        """ALTER SEQUENCE user_metrics_id_seq RESTART WITH 1;""",
+        """ALTER SEQUENCE token_blacklist_id_seq RESTART WITH 1;"""
     ]
     
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             try:
-                # Disable triggers temporarily to avoid conflicts
-                cur.execute("SET session_replication_role = 'replica';")
-                
                 for command in truncate_commands:
                     logger.info(f"Executing: {command}")
                     cur.execute(command)
-                
-                # Re-enable triggers
-                cur.execute("SET session_replication_role = 'origin';")
                 conn.commit()
                 logger.info("All data cleared successfully!")
                 
