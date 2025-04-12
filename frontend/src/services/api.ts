@@ -159,24 +159,39 @@ export const game = {
     totalTimeSeconds: number;
     username: string;
   }) => {
-    const response = await appFetch(`${API_BASE_URL}/game/session/${sessionData.sessionId}/complete`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        session_id: sessionData.sessionId,
-        total_score: sessionData.totalScore,
-        total_attempts: sessionData.totalAttempts,
-        total_time_seconds: sessionData.totalTimeSeconds,
-        username: sessionData.username
-      }),
+    console.log('[API] Completing session:', {
+      sessionId: sessionData.sessionId,
+      data: sessionData
     });
 
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.detail || 'Failed to complete session');
-    }
+    try {
+      const response = await appFetch(`${API_BASE_URL}/game/session/${sessionData.sessionId}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionData.sessionId,
+          total_score: sessionData.totalScore,
+          total_attempts: sessionData.totalAttempts,
+          total_time_seconds: sessionData.totalTimeSeconds,
+          username: sessionData.username
+        }),
+      });
 
-    return true;
+      console.log('[API] Complete session response status:', response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('[API] Complete session error:', errorData);
+        throw new Error(errorData.detail || 'Failed to complete session');
+      }
+
+      const data = await response.json();
+      console.log('[API] Complete session success:', data);
+      return true;
+    } catch (error) {
+      console.error('[API] Complete session error:', error);
+      throw error;
+    }
   },
 
   trackAttempt: async (attemptData: {

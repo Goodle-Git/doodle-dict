@@ -139,17 +139,26 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const endGame = async () => {
+    console.log('[GameContext] Ending game with state:', {
+      sessionId: state.sessionId,
+      score: state.score,
+      attempts: state.attempts,
+      timeLeft: state.timeLeft,
+      username: state.username
+    });
+
     try {
       if (state.sessionId) {
-        // Single API call to complete session
+        console.log('[GameContext] Calling completeSession API');
         await game.completeSession({
           sessionId: state.sessionId,
           totalScore: state.score,
           totalAttempts: state.attempts,
           totalTimeSeconds: TOTAL_GAME_TIME - state.timeLeft,
-          username: state.username // Add username to complete all metrics in one call
+          username: state.username
         });
         
+        console.log('[GameContext] Session completed successfully');
         toast({
           title: "Game Complete!",
           description: "Your score and stats have been recorded!",
@@ -157,6 +166,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         });
       }
     } catch (error) {
+      console.error('[GameContext] Failed to end game:', error);
       toast({
         title: "Error",
         description: "Failed to save your game data",
