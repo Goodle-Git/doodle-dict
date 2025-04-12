@@ -77,5 +77,5 @@ async def update_user_metrics_after_session(session_id: int):
                 cur.execute(query, (session_id, session_id))
                 conn.commit()
     except Exception as e:
-        logger.error(f"Error updating user metrics: {e}", exc_info=True)
+        print(f"Error updating user metrics: {e}")
         raise

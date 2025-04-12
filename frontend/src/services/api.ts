@@ -100,6 +100,15 @@ export const auth = {
   },
 };
 
+interface LeaderboardEntry {
+  username: string;
+  games_played: number;
+  total_score: number;
+  total_attempts: number;
+  avg_time: number;
+  best_streak: number;
+}
+
 export const game = {
   recognize: async (imageData: string): Promise<string> => {
     const response = await appFetch(`${API_BASE_URL}/game/recognize`, {
@@ -117,14 +126,18 @@ export const game = {
     return data.result;
   },
 
-  getLeaderboard: async () => {
-    const response = await appFetch(`${API_BASE_URL}/leaderboard`);
-    const data = await response.json();
-
+  getLeaderboard: async (): Promise<LeaderboardEntry[]> => {
+    console.log('[API] Fetching leaderboard data');
+    const response = await appFetch(`${API_BASE_URL}/game/leaderboard`);
+    
     if (!response.ok) {
-      throw new Error(data.detail || 'Failed to fetch leaderboard');
+      const error = await response.json();
+      console.error('[API] Leaderboard error:', error);
+      throw new Error(error.detail || 'Failed to fetch leaderboard');
     }
 
+    const data = await response.json();
+    console.log('[API] Leaderboard data:', data);
     return data.leaderboard;
   },
 

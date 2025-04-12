@@ -150,3 +150,40 @@ async def complete_game_session(session_id: int, data: GameSessionComplete) -> i
     except Exception as e:
         logger.error(f"Error in complete_game_session: {e}", exc_info=True)
         raise
+
+async def get_leaderboard():
+    query = """
+        SELECT 
+            u.username,
+            COUNT(DISTINCT gs.id) as games_played,
+            SUM(gs.total_score) as total_score,
+            SUM(gs.total_attempts) as total_attempts,
+            ROUND(AVG(gs.avg_drawing_time_ms)::numeric, 2) as avg_time,
+            MAX(gs.streak_count) as best_streak
+        FROM users u
+        LEFT JOIN game_sessions gs ON u.id = gs.user_id
+        GROUP BY u.id, u.username
+        HAVING COUNT(DISTINCT gs.id) > 0
+        ORDER BY total_score DESC
+        LIMIT 10
+    """
+    
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(query)
+                rows = cur.fetchall()
+                return [
+                    {
+                        "username": row[0],
+                        "games_played": row[1],
+                        "total_score": row[2],
+                        "total_attempts": row[3],
+                        "avg_time": row[4],
+                        "best_streak": row[5]
+                    }
+                    for row in rows
+                ]
+    except Exception as e:
+        logger.error(f"Error fetching leaderboard: {e}")
+        raise

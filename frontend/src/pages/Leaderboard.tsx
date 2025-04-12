@@ -3,14 +3,17 @@ import { useEffect, useState } from 'react';
 import { game } from '@/services/api';
 import DashboardNavbar from '@/components/layout/DashboardNavbar';
 
-interface Score {
+interface LeaderboardEntry {
   username: string;
-  score: number;
+  games_played: number;
+  total_score: number;
   total_attempts: number;
+  avg_time: number;
+  best_streak: number;
 }
 
 const Leaderboard = () => {
-  const [scores, setScores] = useState<Score[]>([]);
+  const [scores, setScores] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,7 +21,7 @@ const Leaderboard = () => {
     const fetchScores = async () => {
       try {
         const data = await game.getLeaderboard();
-        setScores(data || []); // Ensure we always have an array
+        setScores(data);
         setError(null);
       } catch (error) {
         console.error('Error fetching leaderboard:', error);
@@ -65,8 +68,10 @@ const Leaderboard = () => {
                           <span className="text-xl">{score.username}</span>
                         </div>
                         <div className="flex gap-4">
-                          <span className="font-bold">Score: {score.score}</span>
-                          <span>Attempts: {score.total_attempts}</span>
+                          <span className="font-bold">Score: {score.total_score}</span>
+                          <span>Games: {score.games_played}</span>
+                          <span>Streak: {score.best_streak}</span>
+                          <span>Avg Time: {score.avg_time}ms</span>
                         </div>
                       </div>
                     </div>
