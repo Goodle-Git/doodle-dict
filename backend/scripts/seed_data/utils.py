@@ -1,24 +1,26 @@
 import random
 from datetime import datetime, timedelta
 
-def generate_session_times(num_sessions, start_date=None):
-    if not start_date:
-        start_date = datetime.now() - timedelta(days=30)
-    
+def generate_session_times(num_sessions):
     sessions = []
-    for _ in range(num_sessions):
-        start_time = start_date + timedelta(
-            days=random.randint(0, 29),
-            hours=random.randint(0, 23),
-            minutes=random.randint(0, 59)
-        )
-        end_time = start_time + timedelta(minutes=random.randint(2, 5))
-        sessions.append((start_time, end_time))
+    # Use fixed start date for consistent weekly view data
+    base_date = datetime.now() - timedelta(days=30)
     
-    return sessions
+    for week in range(4):  # Generate data for 4 weeks
+        for _ in range(num_sessions // 4):  # Spread sessions across weeks
+            start_time = base_date + timedelta(
+                days=week * 7 + random.randint(0, 6),
+                hours=random.randint(9, 20),
+                minutes=random.randint(0, 59)
+            )
+            duration = random.randint(30, 45)  # 30-45 seconds per session
+            end_time = start_time + timedelta(seconds=duration)
+            sessions.append((start_time, end_time))
+    
+    return sorted(sessions, key=lambda x: x[0])
 
 def generate_drawing_metrics():
     return {
-        'drawing_time_ms': random.randint(1000, 10000),
-        'recognition_accuracy': random.uniform(0.5, 1.0)
+        'drawing_time_ms': random.randint(2000, 3500),  # 2-3.5 seconds per drawing
+        'recognition_accuracy': random.uniform(0.85, 1.0)  # High accuracy rate
     }
