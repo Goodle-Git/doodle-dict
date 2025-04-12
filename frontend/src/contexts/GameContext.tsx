@@ -4,8 +4,8 @@ import { game } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 
 const GAME_DURATION = 60 * 2; // 2 minutes
-const CHALLENGE_TIME = 30; // 30 seconds per challenge
-const MAX_CHALLENGES = 15; // 15 challenges per game
+const CHALLENGE_TIME = 15; // 30 seconds per challenge
+const MAX_CHALLENGES = 5; // 15 challenges per game
 const TOTAL_GAME_TIME = CHALLENGE_TIME * MAX_CHALLENGES; // 450 seconds total
 
 interface GameState {
@@ -141,16 +141,14 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
   const endGame = async () => {
     try {
       if (state.sessionId) {
-        // First complete the session with all metrics
+        // Single API call to complete session
         await game.completeSession({
           sessionId: state.sessionId,
           totalScore: state.score,
           totalAttempts: state.attempts,
-          totalTimeSeconds: TOTAL_GAME_TIME - state.timeLeft
+          totalTimeSeconds: TOTAL_GAME_TIME - state.timeLeft,
+          username: state.username // Add username to complete all metrics in one call
         });
-
-        // Then save the general score
-        await game.saveScore(state.username, state.score, state.attempts);
         
         toast({
           title: "Game Complete!",

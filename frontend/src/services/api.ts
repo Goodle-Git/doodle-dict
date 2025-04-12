@@ -117,21 +117,6 @@ export const game = {
     return data.result;
   },
 
-  saveScore: async (username: string, score: number, totalAttempts: number) => {
-    const response = await appFetch(`${API_BASE_URL}/game/save-score`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, score, total_attempts: totalAttempts }),
-    });
-
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.detail || 'Failed to save score');
-    }
-
-    return true;
-  },
-
   getLeaderboard: async () => {
     const response = await appFetch(`${API_BASE_URL}/leaderboard`);
     const data = await response.json();
@@ -172,6 +157,7 @@ export const game = {
     totalScore: number;
     totalAttempts: number;
     totalTimeSeconds: number;
+    username: string;
   }) => {
     const response = await appFetch(`${API_BASE_URL}/game/session/${sessionData.sessionId}/complete`, {
       method: 'POST',
@@ -180,7 +166,8 @@ export const game = {
         session_id: sessionData.sessionId,
         total_score: sessionData.totalScore,
         total_attempts: sessionData.totalAttempts,
-        total_time_seconds: sessionData.totalTimeSeconds
+        total_time_seconds: sessionData.totalTimeSeconds,
+        username: sessionData.username
       }),
     });
 

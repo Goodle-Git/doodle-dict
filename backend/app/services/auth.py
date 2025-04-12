@@ -41,13 +41,25 @@ async def create_user(user_data):
         "password": hashed_password
     })
     
+    # Get created user data
+    created_user = await get_user(user_data.username)
+    
     # Create access token
     access_token = create_access_token(
         data={"sub": user_data.username},
         expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
     
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": created_user["id"],
+            "username": created_user["username"],
+            "email": created_user["email"],
+            "name": created_user["name"]
+        }
+    }
 
 async def handle_password_reset(reset_data):
     user = await get_user_by_email(reset_data.email)

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
-from app.schemas.game import ImageRecognitionRequest, GameScore, DrawingAttempt, GameSession, GameSessionComplete
+from app.schemas.game import ImageRecognitionRequest, GameSessionComplete, DrawingAttempt, GameSession
 from app.services.ai import recognize_doodle
-from app.services.game import save_game_score, record_drawing_attempt, start_game_session, end_game_session
+from app.services.game import record_drawing_attempt, start_game_session, end_game_session
 
 router = APIRouter()
 
@@ -12,14 +12,6 @@ async def recognize_doodle_api(request: ImageRecognitionRequest):
         return {"result": result}
     except Exception as e:
         print(e)
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.post("/save-score")
-async def save_score(score_data: GameScore):
-    try:
-        result = await save_game_score(score_data)
-        return {"message": "Score saved successfully", "session_id": result}
-    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/attempt")

@@ -9,12 +9,20 @@ interface User {
   name: string;
 }
 
+interface SignupData {
+  username: string;
+  email: string;
+  password: string;
+  name: string;
+}
+
 interface AuthContextType {
   isAuthenticated: boolean;
   token: string | null;
   user: User | null;
   login: (token: string, userData: User) => void;
   logout: () => void;
+  signup: (userData: SignupData) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -60,6 +68,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated(true);
   };
 
+  const signup = async (userData: SignupData) => {
+    const response = await auth.signup(userData);
+    // Handle signup response same as login
+    localStorage.setItem('token', response.access_token);
+    localStorage.setItem('user', JSON.stringify(response.user));
+    setToken(response.access_token);
+    setUser(response.user);
+    setIsAuthenticated(true);
+  };
+
   const handleLogout = async () => {
     try {
       if (token) {
@@ -82,7 +100,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       token,
       user,
       login,
-      logout: handleLogout
+      logout: handleLogout,
+      signup
     }}>
       {children}
     </AuthContext.Provider>

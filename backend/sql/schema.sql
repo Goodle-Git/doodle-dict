@@ -103,23 +103,38 @@ RETURNS TRIGGER AS $$
 DECLARE
     current_streak integer;
     max_streak integer;
+    session_score integer;
 BEGIN
-    -- Get current streak from session
-    SELECT COUNT(*) INTO current_streak
-    FROM drawing_attempts a
-    WHERE a.session_id = NEW.session_id
-    AND a.is_correct = true
-    AND a.created_at >= (
-        SELECT MAX(created_at)
+    -- Calculate current streak using a simpler approach
+    WITH consecutive_correct AS (
+        SELECT 
+            row_number() OVER (ORDER BY created_at) - 
+            row_number() OVER (PARTITION BY is_correct ORDER BY created_at) as grp,
+            is_correct
         FROM drawing_attempts
         WHERE session_id = NEW.session_id
-        AND is_correct = false
-    );
+        ORDER BY created_at
+    )
+    SELECT COALESCE(MAX(cnt), 0)
+    INTO current_streak
+    FROM (
+        SELECT COUNT(*) as cnt
+        FROM consecutive_correct
+        WHERE is_correct = true
+        GROUP BY grp
+    ) as streak_counts;
 
-    -- Get max streak
-    SELECT GREATEST(highest_streak, current_streak) INTO max_streak
-    FROM user_metrics
-    WHERE user_id = NEW.user_id;
+    -- Get current session score
+    SELECT COUNT(*) FILTER (WHERE is_correct = true)
+    INTO session_score
+    FROM drawing_attempts
+    WHERE session_id = NEW.session_id;
+
+    -- Update game session streak
+    UPDATE game_sessions
+    SET streak_count = current_streak,
+        successful_attempts = session_score
+    WHERE id = NEW.session_id;
 
     -- Update user metrics
     INSERT INTO user_metrics (
@@ -128,7 +143,8 @@ BEGIN
         successful_attempts,
         avg_drawing_time_ms,
         fastest_correct_ms,
-        highest_streak
+        highest_streak,
+        best_score
     )
     VALUES (
         NEW.user_id,
@@ -136,7 +152,8 @@ BEGIN
         CASE WHEN NEW.is_correct THEN 1 ELSE 0 END,
         NEW.drawing_time_ms,
         CASE WHEN NEW.is_correct THEN NEW.drawing_time_ms ELSE NULL END,
-        max_streak
+        current_streak,
+        session_score
     )
     ON CONFLICT (user_id) DO UPDATE SET
         total_attempts = user_metrics.total_attempts + 1,
@@ -154,7 +171,8 @@ BEGIN
                 )
             ELSE user_metrics.fastest_correct_ms
         END,
-        highest_streak = GREATEST(user_metrics.highest_streak, max_streak),
+        highest_streak = GREATEST(user_metrics.highest_streak, current_streak),
+        best_score = GREATEST(user_metrics.best_score, session_score),
         last_updated = CURRENT_TIMESTAMP;
 
     -- Update difficulty-specific accuracy
@@ -183,3 +201,13 @@ CREATE TRIGGER trg_update_user_metrics
 AFTER INSERT ON drawing_attempts
 FOR EACH ROW
 EXECUTE FUNCTION update_user_metrics();
+
+
+CREATE TABLE IF NOT EXISTS token_blacklist (
+    id SERIAL PRIMARY KEY,
+    token TEXT NOT NULL UNIQUE,
+    blacklisted_on TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_token_blacklist_token ON token_blacklist(token);

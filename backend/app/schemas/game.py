@@ -23,6 +23,7 @@ class GameSessionComplete(BaseModel):
     total_score: int
     total_attempts: int
     total_time_seconds: int
+    username: str  # Add username field
 
 class DrawingAttempt(BaseModel):
     session_id: int
