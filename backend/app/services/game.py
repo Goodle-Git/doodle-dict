@@ -60,16 +60,22 @@ async def update_user_metrics_after_session(session_id: int):
         SET 
             total_attempts = um.total_attempts + s.total_attempts,
             successful_attempts = um.successful_attempts + s.successful_attempts,
-            fastest_correct_ms = LEAST(um.fastest_correct_ms, s.fastest_correct),
-            highest_streak = GREATEST(um.highest_streak, s.max_streak),
+            fastest_correct_ms = LEAST(COALESCE(um.fastest_correct_ms, s.fastest_correct), s.fastest_correct),
+            highest_streak = GREATEST(COALESCE(um.highest_streak, 0), s.max_streak),
             avg_drawing_time_ms = (
-                (um.avg_drawing_time_ms * um.total_attempts + s.avg_time * s.total_attempts) / 
-                (um.total_attempts + s.total_attempts)
+                (COALESCE(um.avg_drawing_time_ms, 0) * COALESCE(um.total_attempts, 0) + 
+                 s.avg_time * s.total_attempts) / 
+                NULLIF(COALESCE(um.total_attempts, 0) + s.total_attempts, 0)
             )
         FROM session_stats s
         WHERE um.user_id = s.user_id
     """
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(query, (session_id,))
-            conn.commit()
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                # Pass session_id twice for both subqueries
+                cur.execute(query, (session_id, session_id))
+                conn.commit()
+    except Exception as e:
+        logger.error(f"Error updating user metrics: {e}", exc_info=True)
+        raise
