@@ -6,6 +6,7 @@ from app.db.connection import get_db_connection, init_connection_pool
 from seed_data.users import USERS
 from seed_data.words import WORD_DIFFICULTY
 from seed_data.utils import generate_session_times, generate_drawing_metrics
+from seed_data.metrics import generate_user_metrics  # Add this import
 import random
 import logging
 
@@ -75,25 +76,56 @@ def seed_drawing_attempts(conn, session_id, user_id, num_attempts):
                 metrics['recognition_accuracy']
             ))
 
-def seed_user_metrics():
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute("SELECT id FROM users")
-            user_ids = [row[0] for row in cur.fetchall()]
+def seed_user_metrics(conn):
+    with conn.cursor() as cur:
+        cur.execute("SELECT id FROM users")
+        user_ids = [row[0] for row in cur.fetchall()]
+        
+        for user_id in user_ids:
+            logger.debug(f"Initializing metrics for user_id: {user_id}")
+            metrics = generate_user_metrics(user_id, random.randint(3, 5))
             
-            for user_id in user_ids:
-                logger.debug(f"Initializing metrics for user_id: {user_id}")
-                cur.execute("""
-                    INSERT INTO user_metrics 
-                    (user_id, current_level, experience_points)
-                    VALUES (%s, %s, %s)
-                    ON CONFLICT (user_id) DO NOTHING
-                """, (
-                    user_id,
-                    random.randint(1, 5),
-                    random.randint(100, 500)
-                ))
-            conn.commit()
+            cur.execute("""
+                INSERT INTO user_metrics 
+                (user_id, current_level, experience_points, total_games_played,
+                 total_attempts, successful_attempts, total_time_spent_seconds,
+                 best_score, fastest_correct_ms, highest_streak,
+                 easy_accuracy, medium_accuracy, hard_accuracy, avg_drawing_time_ms)
+                VALUES (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                )
+                ON CONFLICT (user_id) DO UPDATE SET
+                    current_level = EXCLUDED.current_level,
+                    experience_points = EXCLUDED.experience_points,
+                    total_games_played = EXCLUDED.total_games_played,
+                    total_attempts = EXCLUDED.total_attempts,
+                    successful_attempts = EXCLUDED.successful_attempts,
+                    total_time_spent_seconds = EXCLUDED.total_time_spent_seconds,
+                    best_score = EXCLUDED.best_score,
+                    fastest_correct_ms = EXCLUDED.fastest_correct_ms,
+                    highest_streak = EXCLUDED.highest_streak,
+                    easy_accuracy = EXCLUDED.easy_accuracy,
+                    medium_accuracy = EXCLUDED.medium_accuracy,
+                    hard_accuracy = EXCLUDED.hard_accuracy,
+                    avg_drawing_time_ms = EXCLUDED.avg_drawing_time_ms
+            """, (
+                user_id,
+                metrics["current_level"],
+                metrics["experience_points"],
+                metrics["total_games_played"],
+                metrics["total_attempts"],
+                metrics["successful_attempts"],
+                metrics["total_time_spent_seconds"],
+                metrics["best_score"],
+                metrics["fastest_correct_ms"],
+                metrics["highest_streak"],
+                metrics["easy_accuracy"],
+                metrics["medium_accuracy"],
+                metrics["hard_accuracy"],
+                metrics["avg_drawing_time_ms"]
+            ))
+            
+        conn.commit()
 
 def main():
     try:
@@ -105,7 +137,8 @@ def main():
         seed_users(USERS)
         
         logger.info("Initializing user metrics...")
-        seed_user_metrics()
+        with get_db_connection() as conn:
+            seed_user_metrics(conn)
         
         logger.info("Seeding game sessions and attempts...")
         seed_game_sessions()
