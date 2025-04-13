@@ -76,26 +76,31 @@ const Practice = () => {
       <DashboardNavbar />
       <div className="container mx-auto px-4 py-8 flex-1 pt-24">
         <div className="max-w-4xl mx-auto">
-          <Card className="mb-6 p-6 border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
-            <h2 className="text-xl font-bold text-center mb-4">Practice Mode</h2>
-            <div className="bg-blue-50 p-4 rounded-lg relative">
-              <div className="text-center">
-                <span className="text-2xl font-bold text-blue-800 uppercase">
-                  {challenge.word}
-                </span>
-              </div>
-              <button
-                onClick={regenerateChallenge}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-blue-100 rounded-full"
-                title="New Challenge"
-              >
-                🔄
-              </button>
+          {/* Stats Card - Similar to GameStats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="md:col-span-2">
+              <Card className="p-6 border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+                <div className="bg-white p-4 rounded-lg border-2 border-black relative">
+                  <div className="text-center">
+                    <span className="text-3xl font-bold uppercase">
+                      {challenge.word}
+                    </span>
+                    <button
+                      onClick={regenerateChallenge}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-blue-100 rounded-full"
+                      title="New Challenge"
+                    >
+                      🔄
+                    </button>
+                  </div>
+                </div>
+              </Card>
             </div>
-          </Card>
+          </div>
 
+          {/* Main Drawing Area - Similar to GameBoard */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2"></div>
+            <div className="md:col-span-2">
               <Card className="p-4 border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
                 <Canvas
                   ref={canvasRef}
@@ -115,13 +120,14 @@ const Practice = () => {
                   onClear={clearCanvas}
                   onSubmit={handleRecognizeDoodle}
                   isLoading={isLoading}
+                  submitText="Check Drawing"
+                  loadingText="Checking..."
                 />
               </div>
 
               {result && (
                 <Card className="mt-4 p-4 border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
-                  <h3 className="text-lg font-bold mb-2">🎉 Result:</h3>
-                  <p className="text-xl text-center">{result}</p>
+                  <p className="text-xl text-center font-semibold">{result}</p>
                 </Card>
               )}
             </div>
@@ -132,6 +138,7 @@ const Practice = () => {
           </div>
         </div>
       </div>
+    </div>
   );
 };
 
