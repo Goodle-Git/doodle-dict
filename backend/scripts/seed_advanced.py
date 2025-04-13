@@ -31,7 +31,7 @@ def seed_users(conn, users):
 def seed_game_sessions_and_attempts(conn, user_ids):
     with conn.cursor() as cur:
         all_session_values = []
-        all_attempt_values = []
+        all_attempt_values = [] 
         
         # First, generate all sessions and attempts data
         for user_id in user_ids:
