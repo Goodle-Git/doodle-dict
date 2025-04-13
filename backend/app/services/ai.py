@@ -28,3 +28,4 @@ async def recognize_doodle(image_base64: str) -> dict:
         }
     except Exception as e:
         raise Exception(f"Failed to recognize doodle: {str(e)}")
+ 
