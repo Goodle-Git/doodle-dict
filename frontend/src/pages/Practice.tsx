@@ -87,7 +87,7 @@ const Practice = () => {
                     </span>
                     <button
                       onClick={regenerateChallenge}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-blue-100 rounded-full"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-blue-100 rounded-full text-2xl"
                       title="New Challenge"
                     >
                       🔄

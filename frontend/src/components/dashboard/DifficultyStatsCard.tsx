@@ -23,7 +23,9 @@ const DifficultyStatsCard = ({ stats }: DifficultyStatsCardProps) => {
           {stats.map((stat) => (
             <div key={stat.difficulty} className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="font-medium">{stat.difficulty}</span>
+                <span className="font-medium">{
+                  stat.difficulty.charAt(0).toUpperCase() + stat.difficulty.slice(1).toLowerCase()
+                  }</span>
                 <span className="text-sm text-muted-foreground">
                   {stat.successful_attempts}/{stat.total_attempts} attempts
                 </span>
