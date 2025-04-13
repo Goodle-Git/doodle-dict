@@ -2,77 +2,39 @@ import { useQuery } from '@tanstack/react-query';
 import { dashboardService } from '@/services/dashboard';
 
 export const useDashboardData = () => {
-  const overallStats = useQuery({
-    queryKey: ['overallStats'],
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['dashboardData'],
     queryFn: async () => {
-      const data = await dashboardService.getOverallStats();
-      console.log('[Dashboard Hook] Overall Stats Data:', data);
-      return data;
+      const [
+        overallStats,
+        weeklyProgress,
+        difficultyStats,
+        recentActivities,
+        performanceMetrics
+      ] = await Promise.all([
+        dashboardService.getOverallStats(),
+        dashboardService.getWeeklyProgress(),
+        dashboardService.getDifficultyStats(),
+        dashboardService.getRecentActivities(10),
+        dashboardService.getPerformanceMetrics()
+      ]);
+
+      return {
+        overallStats,
+        weeklyProgress,
+        difficultyStats,
+        recentActivities,
+        performanceMetrics
+      };
     }
-  });
-
-  const weeklyProgress = useQuery({
-    queryKey: ['weeklyProgress'],
-    queryFn: async () => {
-      const data = await dashboardService.getWeeklyProgress();
-      console.log('[Dashboard Hook] Weekly Progress Data:', data);
-      return data;
-    }
-  });
-
-  const difficultyStats = useQuery({
-    queryKey: ['difficultyStats'],
-    queryFn: async () => {
-      const data = await dashboardService.getDifficultyStats();
-      console.log('[Dashboard Hook] Difficulty Stats Data:', data);
-      return data;
-    }
-  });
-
-  const recentActivities = useQuery({
-    queryKey: ['recentActivities'],
-    queryFn: async () => {
-      const data = await dashboardService.getRecentActivities(10);
-      console.log('[Dashboard Hook] Recent Activities Data:', data);
-      return data;
-    }
-  });
-
-  const performanceMetrics = useQuery({
-    queryKey: ['performanceMetrics'],
-    queryFn: async () => {
-      const data = await dashboardService.getPerformanceMetrics();
-      console.log('[Dashboard Hook] Performance Metrics Data:', data);
-      return data;
-    }
-  });
-
-  const isLoading = overallStats.isLoading || 
-    weeklyProgress.isLoading || 
-    difficultyStats.isLoading || 
-    recentActivities.isLoading ||
-    performanceMetrics.isLoading;
-
-  const isError = overallStats.isError || 
-    weeklyProgress.isError || 
-    difficultyStats.isError || 
-    recentActivities.isError ||
-    performanceMetrics.isError;
-
-  console.log('[Dashboard Hook] Complete State:', {
-    overallStats: overallStats.data,
-    weeklyProgress: weeklyProgress.data,
-    difficultyStats: difficultyStats?.data,
-    recentActivities: recentActivities?.data,
-    performanceMetrics: performanceMetrics?.data,
   });
 
   return {
-    overallStats,
-    weeklyProgress,
-    difficultyStats,
-    recentActivities,
-    performanceMetrics,
+    overallStats: data?.overallStats,
+    weeklyProgress: data?.weeklyProgress,
+    difficultyStats: data?.difficultyStats,
+    recentActivities: data?.recentActivities,
+    performanceMetrics: data?.performanceMetrics,
     isLoading,
     isError
   };

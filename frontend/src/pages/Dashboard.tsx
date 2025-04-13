@@ -14,6 +14,7 @@ import AccuracyByDifficultyChart from '@/components/dashboard/AccuracyByDifficul
 import DifficultyStatsCard from '@/components/dashboard/DifficultyStatsCard';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import DrawingMetricsCard from '@/components/dashboard/DrawingMetricsCard';
+import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 
 const queryClient = new QueryClient();
 
@@ -27,10 +28,6 @@ const DashboardContent = () => {
     isLoading,
     isError 
   } = useDashboardData();
-
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
 
   if (isError) {
     return <div className="text-center text-red-500">Error loading dashboard data</div>;
@@ -51,26 +48,34 @@ const DashboardContent = () => {
           </TabsList>
           
           <TabsContent value="overview">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <OverallProgressCard 
-                metrics={{
-                  ...overallStats.data!,
-                  total_time_spent_seconds: performanceMetrics.data?.total_time_spent_seconds
-                }} 
-              />
-              <DifficultyStatsCard stats={difficultyStats.data!} />
-              <DrawingMetricsCard metrics={performanceMetrics.data!} />
-            </div>
-            
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <WeeklyProgressChart data={weeklyProgress.data!} />
-              <AccuracyByDifficultyChart stats={difficultyStats.data!} />
-            </div>
-            
-            <div className="mt-6">
-              <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-              <RecentActivityTable activities={recentActivities.data!} />
-            </div>
+            {isLoading ? (
+              <DashboardSkeleton />
+            ) : (
+              <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {overallStats && (
+                    <OverallProgressCard 
+                      metrics={{
+                        ...overallStats,
+                        total_time_spent_seconds: performanceMetrics?.total_time_spent_seconds
+                      }} 
+                    />
+                  )}
+                  {difficultyStats && <DifficultyStatsCard stats={difficultyStats} />}
+                  {performanceMetrics && <DrawingMetricsCard metrics={performanceMetrics} />}
+                </div>
+                
+                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {weeklyProgress && <WeeklyProgressChart data={weeklyProgress} />}
+                  {difficultyStats && <AccuracyByDifficultyChart stats={difficultyStats} />}
+                </div>
+                
+                <div className="mt-6">
+                  <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
+                  {recentActivities && <RecentActivityTable activities={recentActivities} />}
+                </div>
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="progress">
