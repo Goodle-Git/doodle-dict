@@ -52,7 +52,12 @@ const DashboardContent = () => {
           
           <TabsContent value="overview">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <OverallProgressCard metrics={overallStats.data!} />
+              <OverallProgressCard 
+                metrics={{
+                  ...overallStats.data!,
+                  total_time_spent_seconds: performanceMetrics.data?.total_time_spent_seconds
+                }} 
+              />
               <DifficultyStatsCard stats={difficultyStats.data!} />
               <DrawingMetricsCard metrics={performanceMetrics.data!} />
             </div>

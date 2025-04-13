@@ -60,18 +60,33 @@ export interface PerformanceMetrics {
 }
 
 export const dashboardService = {
-  getOverallStats: () => 
-    api.get<OverallStats>('/api/dashboard/stats/overall'),
+  getOverallStats: async () => {
+    const response = await api.get<OverallStats>('/api/dashboard/stats/overall');
+    console.log('[Dashboard Service] Overall Stats Response:', response);
+    return response;
+  },
 
-  getWeeklyProgress: () => 
-    api.get<WeeklyProgress[]>('/api/dashboard/stats/weekly'),
+  getWeeklyProgress: async () => {
+    const response = await api.get<WeeklyProgress[]>('/api/dashboard/stats/weekly');
+    // console.log('[Dashboard Service] Weekly Progress Response:', response);
+    return response;
+  },
 
-  getDifficultyStats: () => 
-    api.get<DifficultyStats[]>('/api/dashboard/stats/difficulty'),
+  getDifficultyStats: async () => {
+    const response = await api.get<DifficultyStats[]>('/api/dashboard/stats/difficulty');
+    // console.log('[Dashboard Service] Difficulty Stats Response:', response);
+    return response;
+  },
 
-  getRecentActivities: (limit: number = 10) => 
-    api.get<RecentActivity[]>(`/api/dashboard/activities/recent?limit=${limit}`),
+  getRecentActivities: async (limit: number = 10) => {
+    const response = await api.get<RecentActivity[]>(`/api/dashboard/activities/recent?limit=${limit}`);
+    // console.log('[Dashboard Service] Recent Activities Response:', response);
+    return response;
+  },
 
-  getPerformanceMetrics: () => 
-    api.get<PerformanceMetrics>('/api/dashboard/stats/performance'),
+  getPerformanceMetrics: async () => {
+    const response = await api.get<PerformanceMetrics>('/api/dashboard/stats/performance');
+    // console.log('[Dashboard Service] Performance Metrics Response:', response);
+    return response;
+  },
 };

@@ -8,7 +8,7 @@ interface OverallProgressCardProps {
     total_games_played: number;
     total_attempts: number;
     successful_attempts: number;
-    total_time_spent_seconds: number;
+    total_time_spent_seconds?: number;  // Make optional
     current_level: number;
     best_score: number;
   };
@@ -16,7 +16,8 @@ interface OverallProgressCardProps {
 
 const OverallProgressCard = ({ metrics }: OverallProgressCardProps) => {
   const overallProgress = Math.round((metrics.successful_attempts / metrics.total_attempts) * 100) || 0;
-  const formatTime = (seconds: number) => {
+  const formatTime = (seconds?: number) => {
+    if (!seconds) return '0h 0m';  // Handle undefined/null
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     return `${hours}h ${minutes}m`;
