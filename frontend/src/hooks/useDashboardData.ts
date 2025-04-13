@@ -3,34 +3,41 @@ import { dashboardService } from '@/services/dashboard';
 
 export const useDashboardData = () => {
   const overallStats = useQuery({
-    queryKey: ['dashboard', 'overall'],
-    queryFn: dashboardService.getOverallStats,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    queryKey: ['overallStats'],
+    queryFn: dashboardService.getOverallStats
   });
 
   const weeklyProgress = useQuery({
-    queryKey: ['dashboard', 'weekly'],
-    queryFn: dashboardService.getWeeklyProgress,
-    staleTime: 1000 * 60 * 5,
+    queryKey: ['weeklyProgress'],
+    queryFn: dashboardService.getWeeklyProgress
   });
 
   const difficultyStats = useQuery({
-    queryKey: ['dashboard', 'difficulty'],
-    queryFn: dashboardService.getDifficultyStats,
-    staleTime: 1000 * 60 * 5,
+    queryKey: ['difficultyStats'],
+    queryFn: dashboardService.getDifficultyStats
   });
 
   const recentActivities = useQuery({
-    queryKey: ['dashboard', 'recent'],
-    queryFn: () => dashboardService.getRecentActivities(10),
-    staleTime: 1000 * 60,
+    queryKey: ['recentActivities'],
+    queryFn: () => dashboardService.getRecentActivities(10)
   });
 
   const performanceMetrics = useQuery({
-    queryKey: ['dashboard', 'performance'],
-    queryFn: dashboardService.getPerformanceMetrics,
-    staleTime: 1000 * 60 * 5,
+    queryKey: ['performanceMetrics'],
+    queryFn: dashboardService.getPerformanceMetrics
   });
+
+  const isLoading = overallStats.isLoading || 
+    weeklyProgress.isLoading || 
+    difficultyStats.isLoading || 
+    recentActivities.isLoading ||
+    performanceMetrics.isLoading;
+
+  const isError = overallStats.isError || 
+    weeklyProgress.isError || 
+    difficultyStats.isError || 
+    recentActivities.isError ||
+    performanceMetrics.isError;
 
   return {
     overallStats,
@@ -38,17 +45,7 @@ export const useDashboardData = () => {
     difficultyStats,
     recentActivities,
     performanceMetrics,
-    isLoading: 
-      overallStats.isLoading || 
-      weeklyProgress.isLoading || 
-      difficultyStats.isLoading || 
-      recentActivities.isLoading || 
-      performanceMetrics.isLoading,
-    isError:
-      overallStats.isError ||
-      weeklyProgress.isError ||
-      difficultyStats.isError ||
-      recentActivities.isError ||
-      performanceMetrics.isError,
+    isLoading,
+    isError
   };
 };

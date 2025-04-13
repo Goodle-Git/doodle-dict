@@ -12,6 +12,8 @@ export interface OverallStats {
   easy_accuracy: number;
   medium_accuracy: number;
   hard_accuracy: number;
+  total_time_spent_seconds: number;
+  experience_points: number;
 }
 
 export interface WeeklyProgress {
@@ -59,17 +61,17 @@ export interface PerformanceMetrics {
 
 export const dashboardService = {
   getOverallStats: () => 
-    api.get<OverallStats>('/api/dashboard/stats/overall'),
+    api.get<OverallStats>('/dashboard/stats/overall'),
 
   getWeeklyProgress: () => 
-    api.get<WeeklyProgress[]>('/api/dashboard/stats/weekly'),
+    api.get<WeeklyProgress[]>('/dashboard/stats/weekly'),
 
   getDifficultyStats: () => 
-    api.get<DifficultyStats[]>('/api/dashboard/stats/difficulty'),
+    api.get<DifficultyStats[]>('/dashboard/stats/difficulty'),
 
   getRecentActivities: (limit: number = 10) => 
-    api.get<RecentActivity[]>(`/api/dashboard/activities/recent?limit=${limit}`),
+    api.get<RecentActivity[]>(`/dashboard/activities/recent?limit=${limit}`),
 
   getPerformanceMetrics: () => 
-    api.get<PerformanceMetrics>('/api/dashboard/stats/performance'),
+    api.get<PerformanceMetrics>('/dashboard/stats/performance'),
 };

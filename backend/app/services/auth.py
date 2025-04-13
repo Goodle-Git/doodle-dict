@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 from app.core.config import settings
-from app.core.security import verify_password, get_password_hash, create_access_token
+from app.core.security import verify_password, get_password_hash, create_access_token, oauth2_scheme
 from app.db.queries.auth_queries import get_user, create_new_user, get_user_by_email, blacklist_token, is_token_blacklisted
 
 async def authenticate_user(user_data):
@@ -103,3 +103,20 @@ async def invalidate_token(token: str):
         return {"message": "Successfully logged out"}
     except Exception as e:
         raise HTTPException(status_code=401, detail=str(e))
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    try:
+        user = await verify_token(token)
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail="Could not validate credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        return user
+    except Exception as e:
+        raise HTTPException(
+            status_code=401,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
