@@ -13,7 +13,7 @@ import WeeklyProgressChart from '@/components/dashboard/WeeklyProgressChart';
 import AccuracyByDifficultyChart from '@/components/dashboard/AccuracyByDifficultyChart';
 import DifficultyStatsCard from '@/components/dashboard/DifficultyStatsCard';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import DrawingMetricsCard from '@/components/dashboard/DrawingMetricsCard';
+import PersonalBestCard from '@/components/dashboard/PersonalBestCard';
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 
 const queryClient = new QueryClient();
@@ -62,7 +62,7 @@ const DashboardContent = () => {
                     />
                   )}
                   {difficultyStats && <DifficultyStatsCard stats={difficultyStats} />}
-                  {performanceMetrics && <DrawingMetricsCard metrics={performanceMetrics} />}
+                  {performanceMetrics && <PersonalBestCard metrics={performanceMetrics} />}
                 </div>
                 
                 <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">

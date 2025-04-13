@@ -57,6 +57,9 @@ export interface PerformanceMetrics {
   medium_accuracy: number;
   hard_accuracy: number;
   avg_drawing_time_ms: number;
+  best_score_date: string;
+  fastest_correct_date: string;
+  highest_streak_date: string;
 }
 
 export const dashboardService = {

@@ -63,24 +63,47 @@ async def get_recent_activities(user_id: int, limit: int = 10):
 
 async def get_performance_metrics(user_id: int):
     query = """
+    WITH best_metrics AS (
+        SELECT 
+            MAX(gs.total_score) as best_score,
+            MIN(CASE WHEN da.is_correct THEN da.drawing_time_ms END) as fastest_correct_ms,
+            MAX(gs.streak_count) as highest_streak,
+            MAX(CASE WHEN gs.total_score = um.best_score THEN gs.created_at END) as best_score_date,
+            MIN(CASE WHEN da.is_correct AND da.drawing_time_ms = um.fastest_correct_ms THEN da.created_at END) as fastest_correct_date,
+            MAX(CASE WHEN gs.streak_count = um.highest_streak THEN gs.created_at END) as highest_streak_date
+        FROM user_metrics um
+        LEFT JOIN game_sessions gs ON gs.user_id = um.user_id
+        LEFT JOIN drawing_attempts da ON da.user_id = um.user_id
+        WHERE um.user_id = %s
+    )
     SELECT 
-        total_games_played,
-        total_attempts,
-        successful_attempts,
-        total_time_spent_seconds,
-        current_level,
-        experience_points,
-        best_score,
-        fastest_correct_ms,
-        highest_streak,
-        easy_accuracy,
-        medium_accuracy,
-        hard_accuracy,
-        avg_drawing_time_ms
-    FROM user_metrics
-    WHERE user_id = %s
+        um.total_games_played,
+        um.total_attempts,
+        um.successful_attempts,
+        um.total_time_spent_seconds,
+        um.current_level,
+        um.experience_points,
+        um.best_score,
+        um.fastest_correct_ms,
+        um.highest_streak,
+        um.easy_accuracy,
+        um.medium_accuracy,
+        um.hard_accuracy,
+        um.avg_drawing_time_ms,
+        bm.best_score_date,
+        bm.fastest_correct_date,
+        bm.highest_streak_date
+    FROM user_metrics um
+    CROSS JOIN best_metrics bm
+    WHERE um.user_id = %s
     """
     with get_db_connection() as conn:
         with conn.cursor(cursor_factory=DictCursor) as cur:
-            cur.execute(query, (user_id,))
-            return dict(cur.fetchone() or {})
+            cur.execute(query, (user_id, user_id))
+            result = dict(cur.fetchone() or {})
+            # Ensure dates are returned even if NULL
+            if result:
+                result['best_score_date'] = result.get('best_score_date') or result.get('last_updated')
+                result['fastest_correct_date'] = result.get('fastest_correct_date') or result.get('last_updated')
+                result['highest_streak_date'] = result.get('highest_streak_date') or result.get('last_updated')
+            return result
