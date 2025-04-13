@@ -21,11 +21,40 @@ const AccuracyByDifficultyChart = ({ stats }: AccuracyByDifficultyChartProps) =>
       <CardContent>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data}>
+            <BarChart
+              data={data}
+              margin={{
+                top: 5,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="difficulty" />
-              <YAxis yAxisId="left" domain={[0, 100]} label={{ value: 'Accuracy %', angle: -90 }} />
-              <YAxis yAxisId="right" orientation="right" domain={[0, 30]} label={{ value: 'Avg Time (s)', angle: 90 }} />
+              <YAxis 
+                yAxisId="left" 
+                domain={[0, 100]} 
+                label={{ 
+                  value: 'Accuracy %', 
+                  angle: -90, 
+                  position: 'insideLeft',
+                  offset: 0,
+                  style: { textAnchor: 'middle' }
+                }}
+              />
+              <YAxis 
+                yAxisId="right" 
+                orientation="right" 
+                domain={[0, 30]} 
+                label={{ 
+                  value: 'Avg Time (s)', 
+                  angle: 90, 
+                  position: 'insideRight',
+                  offset: 0,
+                  style: { textAnchor: 'middle' }
+                }}
+              />
               <Tooltip />
               <Legend />
               <Bar yAxisId="left" dataKey="accuracy" fill="#4f46e5" name="Accuracy %" />

@@ -1,6 +1,7 @@
 from app.db.connection import get_db_connection
 from psycopg2.extras import DictCursor
 
+
 async def get_user_overall_stats(user_id: int):
     query = """
     SELECT * FROM user_progress_view WHERE user_id = %s
@@ -107,3 +108,73 @@ async def get_performance_metrics(user_id: int):
                 result['fastest_correct_date'] = result.get('fastest_correct_date') or result.get('last_updated')
                 result['highest_streak_date'] = result.get('highest_streak_date') or result.get('last_updated')
             return result
+
+async def get_user_sessions(user_id: int, limit: int = 10, offset: int = 0):
+    """Get paginated list of user's game sessions"""
+    query = """
+        SELECT 
+            id,
+            start_time,
+            end_time,
+            total_score,
+            total_attempts,
+            successful_attempts,
+            avg_drawing_time_ms,
+            streak_count
+        FROM game_sessions
+        WHERE user_id = %s
+            AND end_time IS NOT NULL
+        ORDER BY start_time DESC
+        LIMIT %s OFFSET %s
+    """
+    with get_db_connection() as conn:
+        with conn.cursor(cursor_factory=DictCursor) as cur:
+            cur.execute(query, (user_id, limit, offset))
+            return [dict(row) for row in cur.fetchall()]
+
+async def get_session_details(user_id: int, session_id: int):
+    """Get detailed information about a specific game session"""
+    with get_db_connection() as conn:
+        with conn.cursor(cursor_factory=DictCursor) as cur:
+            # First get session info
+            session_query = """
+                SELECT 
+                    id,
+                    start_time,
+                    end_time,
+                    total_score,
+                    total_attempts,
+                    successful_attempts,
+                    avg_drawing_time_ms,
+                    streak_count
+                FROM game_sessions
+                WHERE id = %s AND user_id = %s
+            """
+            cur.execute(session_query, (session_id, user_id))
+            session = cur.fetchone()
+            
+            if not session:
+                return None
+
+            # Then get all attempts for this session
+            attempts_query = """
+                SELECT 
+                    id,
+                    word_prompt,
+                    difficulty,
+                    is_correct,
+                    drawing_time_ms,
+                    recognition_accuracy,
+                    created_at
+                FROM drawing_attempts
+                WHERE session_id = %s
+                ORDER BY created_at ASC
+            """
+            cur.execute(attempts_query, (session_id,))
+            attempts = cur.fetchall()
+
+            # Combine the data
+            return {
+                **dict(session),
+                "attempts": [dict(attempt) for attempt in attempts]
+            }

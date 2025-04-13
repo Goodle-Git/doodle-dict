@@ -29,12 +29,18 @@ export const useDashboardData = () => {
     }
   });
 
+  const { data: sessions } = useQuery({
+    queryKey: ['userSessions'],
+    queryFn: dashboardService.getUserSessions
+  });
+
   return {
     overallStats: data?.overallStats,
     weeklyProgress: data?.weeklyProgress,
     difficultyStats: data?.difficultyStats,
     recentActivities: data?.recentActivities,
     performanceMetrics: data?.performanceMetrics,
+    sessions,
     isLoading,
     isError
   };

@@ -15,6 +15,7 @@ import DifficultyStatsCard from '@/components/dashboard/DifficultyStatsCard';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import PersonalBestCard from '@/components/dashboard/PersonalBestCard';
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
+import { SessionsList } from '@/components/dashboard/SessionsList';
 
 const queryClient = new QueryClient();
 
@@ -26,7 +27,8 @@ const DashboardContent = () => {
     recentActivities,
     performanceMetrics,
     isLoading,
-    isError 
+    isError,
+    sessions
   } = useDashboardData();
 
   if (isError) {
@@ -79,7 +81,11 @@ const DashboardContent = () => {
           </TabsContent>
           
           <TabsContent value="progress">
-            {/* Additional progress metrics will be added here */}
+            {isLoading ? (
+              <DashboardSkeleton />
+            ) : (
+              <SessionsList sessions={sessions} />
+            )}
           </TabsContent>
         </Tabs>
       </main>

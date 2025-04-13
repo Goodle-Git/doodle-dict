@@ -62,23 +62,48 @@ export interface PerformanceMetrics {
   highest_streak_date: string;
 }
 
+export interface SessionListItem {
+  id: number;
+  start_time: string;
+  end_time: string;
+  total_score: number;
+  total_attempts: number;
+  successful_attempts: number;
+  avg_drawing_time_ms: number;
+  streak_count: number;
+}
+
+export interface SessionDetail {
+  id: number;
+  start_time: string;
+  end_time: string;
+  total_score: number;
+  total_attempts: number;
+  successful_attempts: number;
+  avg_drawing_time_ms: number;
+  streak_count: number;
+  attempts: {
+    id: number;
+    word_prompt: string;
+    difficulty: string;
+    is_correct: boolean;
+    drawing_time_ms: number;
+    recognition_accuracy: number;
+    created_at: string;
+  }[];
+}
+
 export const dashboardService = {
   getOverallStats: async () => {
-    const response = await api.get<OverallStats>('/api/dashboard/stats/overall');
-    console.log('[Dashboard Service] Overall Stats Response:', response);
-    return response;
+    return api.get<OverallStats>('/api/dashboard/stats/overall');
   },
 
   getWeeklyProgress: async () => {
-    const response = await api.get<WeeklyProgress[]>('/api/dashboard/stats/weekly');
-    // console.log('[Dashboard Service] Weekly Progress Response:', response);
-    return response;
+    return api.get<WeeklyProgress[]>('/api/dashboard/stats/weekly');
   },
 
   getDifficultyStats: async () => {
-    const response = await api.get<DifficultyStats[]>('/api/dashboard/stats/difficulty');
-    // console.log('[Dashboard Service] Difficulty Stats Response:', response);
-    return response;
+    return api.get<DifficultyStats[]>('/api/dashboard/stats/difficulty');
   },
 
   getRecentActivities: async (limit: number = 10) => {
@@ -92,4 +117,22 @@ export const dashboardService = {
     // console.log('[Dashboard Service] Performance Metrics Response:', response);
     return response;
   },
+
+  async getUserSessions(): Promise<SessionListItem[]> {
+    try {
+      return await api.get<SessionListItem[]>('/api/dashboard/sessions');
+    } catch (error) {
+      console.error('Error fetching user sessions:', error);
+      return [];
+    }
+  },
+
+  async getSessionDetails(sessionId: number): Promise<SessionDetail | null> {
+    try {
+      return await api.get<SessionDetail>(`/api/dashboard/sessions/${sessionId}`);
+    } catch (error) {
+      console.error('Error fetching session details:', error);
+      return null;
+    }
+  }
 };
