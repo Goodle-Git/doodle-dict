@@ -13,7 +13,7 @@ const DifficultyStatsCard = ({ stats }: DifficultyStatsCardProps) => {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="text-xl flex items-center gap-2">
           <Target className="h-5 w-5 text-blue-500" />
           Difficulty Level Performance
         </CardTitle>

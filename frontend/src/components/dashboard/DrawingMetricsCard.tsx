@@ -13,7 +13,7 @@ const DrawingMetricsCard = ({ metrics }: DrawingMetricsCardProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="text-xl flex items-center gap-2">
           <Clock className="h-5 w-5 text-blue-500" />
           Drawing Metrics
         </CardTitle>

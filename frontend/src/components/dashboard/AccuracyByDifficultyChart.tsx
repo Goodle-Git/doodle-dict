@@ -16,7 +16,7 @@ const AccuracyByDifficultyChart = ({ stats }: AccuracyByDifficultyChartProps) =>
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Accuracy by Difficulty</CardTitle>
+        <CardTitle className="text-xl">Accuracy by Difficulty</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">

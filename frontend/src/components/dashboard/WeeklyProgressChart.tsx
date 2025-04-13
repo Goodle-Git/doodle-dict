@@ -18,7 +18,7 @@ const WeeklyProgressChart = ({ data }: WeeklyProgressChartProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Weekly Performance</CardTitle>
+        <CardTitle className="text-xl">Weekly Performance</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">
