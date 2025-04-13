@@ -1,6 +1,6 @@
 // src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth } from '../services/api';
+import { authService } from '../services';
 
 interface User {
   id: number;
@@ -45,8 +45,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!token) return;
       
       try {
-        const userData = await auth.verifyToken(token);
-        setUser(userData);
+        const userData = await authService.verifyToken();
+        if (userData && userData.id) {  // Check specifically for id
+          setUser(userData);
+        } else {
+          handleLogout();
+        }
       } catch (error) {
         console.error('Token verification failed:', error);
         handleLogout();
@@ -69,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signup = async (userData: SignupData) => {
-    const response = await auth.signup(userData);
+    const response = await authService.signup(userData);
     // Handle signup response same as login
     localStorage.setItem('token', response.access_token);
     localStorage.setItem('user', JSON.stringify(response.user));
@@ -81,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleLogout = async () => {
     try {
       if (token) {
-        await auth.logout(token);
+        await authService.logout();
       }
     } catch (error) {
       console.error('Logout failed:', error);

@@ -1,4 +1,4 @@
-interface Challenge {
+export interface Challenge {
   word: string;
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
 }

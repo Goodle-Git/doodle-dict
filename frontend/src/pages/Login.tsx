@@ -4,8 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CustomButton } from '@/components/ui/custom-button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { authService } from '@/services';
-import { LoginCredentials } from '@/services/auth';
+import { authService } from '@/services/auth';
 
 const Login = () => {
   const [username, setUsername] = useState('');

@@ -87,6 +87,7 @@ async def verify_token(token: str):
             raise HTTPException(status_code=404, detail="User not found")
             
         return {
+            "id": user["id"],  # Added id to response
             "username": user["username"],
             "email": user["email"],
             "name": user["name"]

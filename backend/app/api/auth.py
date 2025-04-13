@@ -36,7 +36,10 @@ async def forgot_password(data: PasswordReset):
 @router.get("/verify")
 async def verify_token_endpoint(token: str = Depends(oauth2_scheme)):
     try:
-        return await verify_token(token)
+        user = await verify_token(token)
+        if not user.get('id'):
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return user
     except Exception as e:
         raise HTTPException(status_code=401, detail=str(e))
 

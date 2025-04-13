@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CustomButton } from '@/components/ui/custom-button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { auth } from '@/services/api';
+import { authService } from '@/services/auth';  // Updated import
 
 const Signup = () => {
   const [username, setUsername] = useState('');
@@ -17,7 +17,7 @@ const Signup = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const data = await auth.signup({ username, email, password, name });
+      const data = await authService.signup({ username, email, password, name });  // Updated auth to authService
       login(data.access_token, data.user);
       toast.success('Account created successfully!');
       navigate('/dashboard');

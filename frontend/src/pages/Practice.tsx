@@ -4,18 +4,16 @@ import Canvas from '@/components/doodle/Canvas';
 import DrawingTools, { DrawingTool } from '@/components/doodle/DrawingTools';
 import Help from '@/components/doodle/Help';
 import { Card } from '@/components/ui/card';
-import { DOODLE_CHALLENGES } from '@/lib/challenge';
+import { Challenge, DOODLE_CHALLENGES } from '@/lib/challenge';
 import { toast } from "@/hooks/use-toast";
-import { game } from '@/services/api';
-
-const EASY_DOODLE_CHALLENGES = DOODLE_CHALLENGES;
+import { gameService } from '@/services';
 
 const Practice = () => {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [tool, setTool] = useState<DrawingTool>('pen');
-  const [challenge, setChallenge] = useState('');
-  const [result, setResult] = useState('');
+  const [challenge, setChallenge] = useState<Challenge>(DOODLE_CHALLENGES[0]);
+  const [result, setResult] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -23,8 +21,8 @@ const Practice = () => {
   }, []);
 
   const regenerateChallenge = () => {
-    const randomChallenge = EASY_DOODLE_CHALLENGES[
-      Math.floor(Math.random() * EASY_DOODLE_CHALLENGES.length)
+    const randomChallenge = DOODLE_CHALLENGES[
+      Math.floor(Math.random() * DOODLE_CHALLENGES.length)
     ];
     setChallenge(randomChallenge);
     clearCanvas();
@@ -46,9 +44,9 @@ const Practice = () => {
     try {
       const canvas = canvasRef.current;
       const imageData = canvas.toDataURL('image/png');
-      const result = await game.recognize(imageData);
+      const response = await gameService.recognize(imageData);
       
-      if (result.toLowerCase() === challenge.toLowerCase()) {
+      if (response.result.toLowerCase() === challenge.word.toLowerCase()) {
         toast({
           title: "Correct! 🎨",
           description: "Well done! Try another challenge.",
@@ -61,7 +59,7 @@ const Practice = () => {
           variant: "destructive",
         });
       }
-      setResult(result);
+      setResult(response.result);
     } catch (error) {
       toast({
         title: "Error",
@@ -83,7 +81,7 @@ const Practice = () => {
             <div className="bg-blue-50 p-4 rounded-lg relative">
               <div className="text-center">
                 <span className="text-2xl font-bold text-blue-800 uppercase">
-                  {challenge}
+                  {challenge.word}
                 </span>
               </div>
               <button
@@ -97,7 +95,7 @@ const Practice = () => {
           </Card>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2">
+            <div className="md:col-span-2"></div>
               <Card className="p-4 border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
                 <Canvas
                   ref={canvasRef}
@@ -129,12 +127,11 @@ const Practice = () => {
             </div>
 
             <div className="md:col-span-1">
-              <Help word={challenge} className="sticky top-24" />
+              <Help word={challenge.word} className="sticky top-24" />
             </div>
           </div>
         </div>
       </div>
-    </div>
   );
 };
 

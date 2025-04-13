@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getRandomChallenge } from '@/lib/challenge';
-import { game } from '@/services/api';
-import { toast } from '@/hooks/use-toast';
 import { gameService } from '@/services';
+import { toast } from '@/hooks/use-toast';
 
 const GAME_DURATION = 60 * 2; // 2 minutes
 const CHALLENGE_TIME = 15; // 30 seconds per challenge
@@ -110,7 +109,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
 
   const startGame = async (username: string) => {
     try {
-      const sessionId = await game.startSession();
+      const sessionId = await gameService.startSession();
       setState({
         ...state,
         username,
@@ -151,7 +150,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       if (state.sessionId) {
         console.log('[GameContext] Calling completeSession API');
-        await game.completeSession({
+        await gameService.completeSession({
           sessionId: state.sessionId,
           totalScore: state.score,
           totalAttempts: state.attempts,

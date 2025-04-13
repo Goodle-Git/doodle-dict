@@ -23,18 +23,25 @@ interface AuthResponse {
   };
 }
 
+interface UserResponse {
+  username: string;
+  email: string;
+  name: string;
+  id: number;
+}
+
 export const authService = {
   login: (credentials: LoginCredentials): Promise<AuthResponse> => 
-    api.post<AuthResponse>('/auth/login', credentials),
+    api.post<AuthResponse>('/api/auth/login', credentials),
 
   signup: (userData: SignupData) => 
-    api.post<AuthResponse>('/auth/signup', userData),
+    api.post<AuthResponse>('/api/auth/signup', userData),
 
   logout: async () => {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        await api.post('/auth/logout', {});
+        await api.post('/api/auth/logout', {});
       } finally {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -43,5 +50,5 @@ export const authService = {
   },
 
   verifyToken: () => 
-    api.get<{ valid: boolean }>('/auth/verify'),
+    api.get<UserResponse>('/api/auth/verify'),
 };

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { game } from '@/services/api';
+import { gameService } from '@/services';
 import DashboardNavbar from '@/components/layout/DashboardNavbar';
 
 interface LeaderboardEntry {
@@ -20,8 +20,8 @@ const Leaderboard = () => {
   useEffect(() => {
     const fetchScores = async () => {
       try {
-        const data = await game.getLeaderboard();
-        setScores(data);
+        const data = await gameService.getLeaderboard();
+        setScores(data.leaderboard);
         setError(null);
       } catch (error) {
         console.error('Error fetching leaderboard:', error);

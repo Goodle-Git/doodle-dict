@@ -61,17 +61,17 @@ export interface PerformanceMetrics {
 
 export const dashboardService = {
   getOverallStats: () => 
-    api.get<OverallStats>('/dashboard/stats/overall'),
+    api.get<OverallStats>('/api/dashboard/stats/overall'),
 
   getWeeklyProgress: () => 
-    api.get<WeeklyProgress[]>('/dashboard/stats/weekly'),
+    api.get<WeeklyProgress[]>('/api/dashboard/stats/weekly'),
 
   getDifficultyStats: () => 
-    api.get<DifficultyStats[]>('/dashboard/stats/difficulty'),
+    api.get<DifficultyStats[]>('/api/dashboard/stats/difficulty'),
 
   getRecentActivities: (limit: number = 10) => 
-    api.get<RecentActivity[]>(`/dashboard/activities/recent?limit=${limit}`),
+    api.get<RecentActivity[]>(`/api/dashboard/activities/recent?limit=${limit}`),
 
   getPerformanceMetrics: () => 
-    api.get<PerformanceMetrics>('/dashboard/stats/performance'),
+    api.get<PerformanceMetrics>('/api/dashboard/stats/performance'),
 };
