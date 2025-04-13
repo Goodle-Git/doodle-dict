@@ -4,15 +4,15 @@ import { gameService } from '@/services';
 import { toast } from '@/hooks/use-toast';
 
 const GAME_DURATION = 60 * 2; // 2 minutes
-const CHALLENGE_TIME = 15; // 30 seconds per challenge
-const MAX_CHALLENGES = 5; // 15 challenges per game
+const CHALLENGE_TIME = 30; // 30 seconds per challenge
+const MAX_CHALLENGES = 15; // 15 challenges per game
 const TOTAL_GAME_TIME = CHALLENGE_TIME * MAX_CHALLENGES; // 450 seconds total
 
 interface GameState {
   username: string;
   score: number;
   attempts: number;
-  timeLeft: number;
+  timeTaken: number;  // Add this
   currentWord: string;
   isLoading: boolean;
   gameStarted: boolean;
@@ -52,7 +52,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     username: '',
     score: 0,
     attempts: 0,
-    timeLeft: GAME_DURATION,
+    timeTaken: 0,  // Add this
     currentWord: '',
     isLoading: false,
     gameStarted: false,
@@ -74,38 +74,38 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     let timer: NodeJS.Timeout;
     
-    if (state.gameStarted && !state.gameEnded && state.challengeTimeLeft > 0) {
+    if (state.gameStarted && !state.gameEnded && state.challengesCompleted < MAX_CHALLENGES) {
       timer = setInterval(() => {
         setState(prev => {
           if (prev.challengeTimeLeft <= 1) {
-            // Time's up for current challenge, move to next one
+            // Time's up for current challenge, move to next one regardless of completion
             const nextChallenge = getRandomChallenge();
             return {
               ...prev,
               challengeTimeLeft: CHALLENGE_TIME,
               currentChallenge: nextChallenge,
               currentWord: nextChallenge.word,
-              timeLeft: prev.timeLeft - 1,
+              challengesCompleted: prev.challengesCompleted + 1,
+              timeTaken: prev.timeTaken + 1,
             };
           }
           return {
             ...prev,
             challengeTimeLeft: prev.challengeTimeLeft - 1,
-            timeLeft: prev.timeLeft - 1,
+            timeTaken: prev.timeTaken + 1,
           };
         });
       }, 1000);
     }
 
     return () => clearInterval(timer);
-  }, [state.gameStarted, state.gameEnded, state.challengeTimeLeft]);
+  }, [state.gameStarted, state.gameEnded, state.challengesCompleted]);
 
   useEffect(() => {
-    if (state.gameStarted && 
-        (state.challengesCompleted >= MAX_CHALLENGES || state.timeLeft <= 0)) {
+    if (state.gameStarted && state.challengesCompleted >= MAX_CHALLENGES) {
       endGame();
     }
-  }, [state.challengesCompleted, state.timeLeft]);
+  }, [state.challengesCompleted]);
 
   const startGame = async (username: string) => {
     try {
@@ -116,7 +116,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         sessionId,
         score: 0,
         attempts: 0,
-        timeLeft: TOTAL_GAME_TIME,
+        timeTaken: 0,
         challengeTimeLeft: CHALLENGE_TIME,
         challengesCompleted: 0,
         gameStarted: true,
@@ -143,7 +143,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       sessionId: state.sessionId,
       score: state.score,
       attempts: state.attempts,
-      timeLeft: state.timeLeft,
+      timeTaken: state.timeTaken,
       username: state.username
     });
 
@@ -154,7 +154,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
           sessionId: state.sessionId,
           totalScore: state.score,
           totalAttempts: state.attempts,
-          totalTimeSeconds: TOTAL_GAME_TIME - state.timeLeft,
+          totalTimeSeconds: state.timeTaken,
           username: state.username
         });
         
@@ -184,7 +184,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       stats: {
         ...prev.stats,
         correctGuesses: [...prev.stats.correctGuesses, correct ? 1 : 0],
-        timePerAttempt: [...prev.stats.timePerAttempt, GAME_DURATION - prev.timeLeft],
+        timePerAttempt: [...prev.stats.timePerAttempt, GAME_DURATION - prev.timeTaken],
         wordHistory: [...prev.stats.wordHistory, prev.currentWord],
       }
     }));
@@ -204,7 +204,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       ...state,
       score: 0,
       attempts: 0,
-      timeLeft: GAME_DURATION,
+      timeTaken: 0,
       gameStarted: false,
       gameEnded: false,
       currentWord: '',

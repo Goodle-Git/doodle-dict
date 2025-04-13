@@ -3,7 +3,7 @@ import { useGame } from '@/contexts/GameContext';
 
 export const GameStats = () => {
   const { state } = useGame();
-  const { score, timeLeft, attempts, currentWord, challengeTimeLeft, challengesCompleted } = state;
+  const { score, timeTaken, challengeTimeLeft, challengesCompleted, currentWord } = state;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -15,8 +15,8 @@ export const GameStats = () => {
               <p className="text-2xl font-bold">{score}</p>
             </div>
             <div className="bg-red-100 p-3 rounded-lg text-center">
-              <p className="text-xl font-bold">Total Time</p>
-              <p className="text-2xl font-bold">{timeLeft}s</p>
+              <p className="text-xl font-bold">Time Taken</p>
+              <p className="text-2xl font-bold">{timeTaken}s</p>
             </div>
             <div className="bg-orange-100 p-3 rounded-lg text-center">
               <p className="text-xl font-bold">Challenge</p>

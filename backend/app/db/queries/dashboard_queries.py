@@ -109,34 +109,70 @@ async def get_performance_metrics(user_id: int):
                 result['highest_streak_date'] = result.get('highest_streak_date') or result.get('last_updated')
             return result
 
+def calculate_max_streak(attempts):
+    """Calculate the longest streak of correct attempts"""
+    if not attempts:
+        return 0
+        
+    current_streak = 0
+    max_streak = 0
+    
+    # Sort attempts by created_at to ensure correct order
+    sorted_attempts = sorted(attempts, key=lambda x: x['created_at'])
+    
+    for attempt in sorted_attempts:
+        if attempt['is_correct']:
+            current_streak += 1
+            max_streak = max(max_streak, current_streak)
+        else:
+            current_streak = 0
+            
+    return max_streak
+
 async def get_user_sessions(user_id: int, limit: int = 10, offset: int = 0):
     """Get paginated list of user's game sessions"""
-    query = """
-        SELECT 
-            id,
-            start_time,
-            end_time,
-            total_score,
-            total_attempts,
-            successful_attempts,
-            avg_drawing_time_ms,
-            streak_count
-        FROM game_sessions
-        WHERE user_id = %s
-            AND end_time IS NOT NULL
-        ORDER BY start_time DESC
-        LIMIT %s OFFSET %s
-    """
     with get_db_connection() as conn:
         with conn.cursor(cursor_factory=DictCursor) as cur:
-            cur.execute(query, (user_id, limit, offset))
-            return [dict(row) for row in cur.fetchall()]
+            # Get basic session info
+            sessions_query = """
+                SELECT 
+                    gs.id,
+                    gs.start_time,
+                    gs.end_time,
+                    gs.total_score,
+                    gs.total_attempts,
+                    gs.successful_attempts,
+                    gs.avg_drawing_time_ms
+                FROM game_sessions gs
+                WHERE gs.user_id = %s
+                    AND gs.end_time IS NOT NULL
+                ORDER BY gs.start_time DESC
+                LIMIT %s OFFSET %s
+            """
+            cur.execute(sessions_query, (user_id, limit, offset))
+            sessions = [dict(session) for session in cur.fetchall()]
+
+            # For each session, get its attempts and calculate streak
+            for session in sessions:
+                attempts_query = """
+                    SELECT 
+                        is_correct,
+                        created_at
+                    FROM drawing_attempts
+                    WHERE session_id = %s
+                    ORDER BY created_at ASC
+                """
+                cur.execute(attempts_query, (session['id'],))
+                attempts = cur.fetchall()
+                session['streak_count'] = calculate_max_streak(attempts)
+
+            return sessions
 
 async def get_session_details(user_id: int, session_id: int):
     """Get detailed information about a specific game session"""
     with get_db_connection() as conn:
         with conn.cursor(cursor_factory=DictCursor) as cur:
-            # First get session info
+            # Get basic session info
             session_query = """
                 SELECT 
                     id,
@@ -145,8 +181,7 @@ async def get_session_details(user_id: int, session_id: int):
                     total_score,
                     total_attempts,
                     successful_attempts,
-                    avg_drawing_time_ms,
-                    streak_count
+                    avg_drawing_time_ms
                 FROM game_sessions
                 WHERE id = %s AND user_id = %s
             """
@@ -156,7 +191,7 @@ async def get_session_details(user_id: int, session_id: int):
             if not session:
                 return None
 
-            # Then get all attempts for this session
+            # Get all attempts for this session
             attempts_query = """
                 SELECT 
                     id,
@@ -171,10 +206,13 @@ async def get_session_details(user_id: int, session_id: int):
                 ORDER BY created_at ASC
             """
             cur.execute(attempts_query, (session_id,))
-            attempts = cur.fetchall()
+            attempts = [dict(attempt) for attempt in cur.fetchall()]
 
-            # Combine the data
+            # Calculate streak using the helper function
+            session = dict(session)
+            session['streak_count'] = calculate_max_streak(attempts)
+            
             return {
-                **dict(session),
-                "attempts": [dict(attempt) for attempt in attempts]
+                **session,
+                "attempts": attempts
             }
