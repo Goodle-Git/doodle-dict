@@ -2,6 +2,7 @@ import React from 'react';
 import { useEffect, useState } from 'react';
 import { gameService } from '@/services';
 import DashboardNavbar from '@/components/layout/DashboardNavbar';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LeaderboardEntry {
   username: string;
@@ -16,6 +17,7 @@ const Leaderboard = () => {
   const [scores, setScores] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchScores = async () => {
@@ -65,7 +67,16 @@ const Leaderboard = () => {
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-4">
                           <span className="text-2xl font-bold">#{index + 1}</span>
-                          <span className="text-xl">{score.username}</span>
+                          <span className="text-xl">
+                            {score.username === user?.username ? (
+                              <span className="font-bold text-doodle-coral">
+                                {score.username}
+                                <span className="text-sm ml-1 opacity-75">(You)</span>
+                              </span>
+                            ) : (
+                              score.username
+                            )}
+                          </span>
                         </div>
                         <div className="flex gap-4">
                           <span className="font-bold">Score: {score.total_score}</span>
