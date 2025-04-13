@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getRandomChallenge } from '@/lib/challenge';
 import { game } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
+import { gameService } from '@/services';
 
 const GAME_DURATION = 60 * 2; // 2 minutes
 const CHALLENGE_TIME = 15; // 30 seconds per challenge
@@ -226,7 +227,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     const userData = JSON.parse(localStorage.getItem('user') || '{}');
 
     try {
-      await game.trackAttempt({
+      await gameService.trackAttempt({
         sessionId: state.sessionId,
         userId: userData.id,
         wordPrompt: state.currentWord,
@@ -235,20 +236,25 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         drawingTimeMs: drawingTime,
         recognitionAccuracy: accuracy,
       });
+
+      updateScore(isCorrect);
+
+      // Only proceed to next challenge if correct
+      if (isCorrect) {
+        setState(prev => ({
+          ...prev,
+          challengesCompleted: prev.challengesCompleted + 1,
+          challengeTimeLeft: CHALLENGE_TIME,
+        }));
+        setCurrentWord();
+      }
     } catch (error) {
       console.error('Failed to track attempt:', error);
-    }
-
-    updateScore(isCorrect);
-
-    // Only proceed to next challenge if correct
-    if (isCorrect) {
-      setState(prev => ({
-        ...prev,
-        challengesCompleted: prev.challengesCompleted + 1,
-        challengeTimeLeft: CHALLENGE_TIME, // Reset challenge timer
-      }));
-      setCurrentWord(); // Get next challenge
+      toast({
+        title: "Error",
+        description: "Failed to save your attempt",
+        variant: "destructive",
+      });
     }
   };
 

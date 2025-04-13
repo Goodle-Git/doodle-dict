@@ -4,7 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CustomButton } from '@/components/ui/custom-button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { auth } from '@/services/api';
+import { authService } from '@/services';
+import { LoginCredentials } from '@/services/auth';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -15,7 +16,7 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const data = await auth.login(username, password);
+      const data = await authService.login({ username, password });
       login(data.access_token, data.user);
       toast.success('Successfully logged in!');
       navigate('/dashboard');

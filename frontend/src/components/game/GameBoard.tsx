@@ -4,7 +4,7 @@ import Canvas from '../doodle/Canvas';
 import DrawingTools, { DrawingTool } from '../doodle/DrawingTools';
 import Help from '../doodle/Help';
 import { useGame } from '@/contexts/GameContext';
-import { game } from '@/services/api';
+import { gameService } from '@/services';
 import { toast } from '@/hooks/use-toast';
 
 export const GameBoard = () => {
@@ -36,10 +36,10 @@ export const GameBoard = () => {
       
       const canvas = canvasRef.current;
       const imageData = canvas.toDataURL('image/png');
-      const result = await game.recognize(imageData);
+      const { result, confidence } = await gameService.recognize(imageData);
       
       const isCorrect = result.toLowerCase() === state.currentWord.toLowerCase();
-      await handleAttempt(result, 1.0);
+      await handleAttempt(result, confidence);
       
       toast({
         title: isCorrect ? "Correct! 🎨" : "Wrong! ❌",
