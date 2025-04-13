@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 async def recognize_doodle_api(request: ImageRecognitionRequest):
     try:
         result = await recognize_doodle(request.image)
-        return {"result": result}
+        return result  # Now returns both result and confidence
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail=str(e))

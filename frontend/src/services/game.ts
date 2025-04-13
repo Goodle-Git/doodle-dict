@@ -2,7 +2,7 @@ import { api } from '@/lib/api';
 
 interface RecognizeResponse {
   result: string;
-  confidence: number;
+  confidence: number;  // Add this field to match the backend response
 }
 
 interface SessionResponse {

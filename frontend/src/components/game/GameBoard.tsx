@@ -39,6 +39,7 @@ export const GameBoard = () => {
       const { result, confidence } = await gameService.recognize(imageData);
       
       const isCorrect = result.toLowerCase() === state.currentWord.toLowerCase();
+      // Pass the confidence (recognition accuracy) from the recognition result
       await handleAttempt(result, confidence);
       
       toast({
