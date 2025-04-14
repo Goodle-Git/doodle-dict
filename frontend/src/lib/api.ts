@@ -1,3 +1,5 @@
+import { authService } from "@/services";
+
 const baseURL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
 type RequestOptions = {
@@ -9,8 +11,35 @@ type RequestOptions = {
 async function handleResponse(response: Response) {
   if (!response.ok) {
     if (response.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      const lastRefreshAttempt = localStorage.getItem('lastRefreshAttempt');
+      const now = Date.now();
+      
+      if (!lastRefreshAttempt || now - parseInt(lastRefreshAttempt) > 5 * 60 * 1000) {
+        try {
+          localStorage.setItem('lastRefreshAttempt', now.toString());
+          await authService.verifyToken();
+          
+          // Extract the relative path from the full URL
+          const relativeUrl = new URL(response.url).pathname;
+          
+          // Retry the original request with the same method and body
+          return fetchWithAuth(relativeUrl, {
+            method: response.type === 'basic' ? 'GET' : 'POST', // Default to GET for basic requests
+            body: response.bodyUsed ? undefined : await response.clone().text()
+          });
+        } catch {
+          // If verification fails, clear auth and redirect
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('lastVerified');
+          localStorage.removeItem('lastRefreshAttempt');
+          window.location.href = '/login';
+        }
+      } else {
+        // If we've recently tried to refresh, just logout
+        localStorage.clear();
+        window.location.href = '/login';
+      }
     }
     const error = await response.json();
     throw new Error(error.detail || 'API request failed');

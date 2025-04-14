@@ -44,10 +44,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const verifyToken = async () => {
       if (!token) return;
       
+      // Check if last verification was less than 30 minutes ago
+      const lastVerified = localStorage.getItem('lastVerified');
+      const now = Date.now();
+      if (lastVerified && now - parseInt(lastVerified) < 30 * 60 * 1000) {
+        return; // Skip verification if less than 30 minutes passed
+      }
+      
       try {
         const userData = await authService.verifyToken();
-        if (userData && userData.id) {  // Check specifically for id
+        if (userData && userData.id) {
           setUser(userData);
+          localStorage.setItem('lastVerified', now.toString());
         } else {
           handleLogout();
         }
@@ -58,8 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     verifyToken();
-    // Check token every 5 minutes
-    const interval = setInterval(verifyToken, 5 * 60 * 1000);
+    // Check token every 30 minutes instead of 5 minutes
+    const interval = setInterval(verifyToken, 30 * 60 * 1000);
     
     return () => clearInterval(interval);
   }, [token]);
@@ -67,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = (newToken: string, userData: User) => {
     localStorage.setItem('token', newToken);
     localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('lastVerified', Date.now().toString()); // Add this
     setToken(newToken);
     setUser(userData);
     setIsAuthenticated(true);
