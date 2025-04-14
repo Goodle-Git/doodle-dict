@@ -12,8 +12,8 @@ export const GameContent = () => {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <DashboardNavbar />
-      <div className="container mx-auto px-4 py-8 flex-1 pt-24">
-        <div className="max-w-4xl mx-auto">
+      <div className="container-fluid px-8 py-8 flex-1 pt-24"> {/* Changed from container to container-fluid and increased padding */}
+        <div className="max-w-7xl mx-auto"> {/* Changed from max-w-4xl to max-w-7xl */}
           {state.gameEnded ? (
             <GameEndScreen />
           ) : !state.gameStarted ? (

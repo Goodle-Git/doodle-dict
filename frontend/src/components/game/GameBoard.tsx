@@ -61,8 +61,8 @@ export const GameBoard = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div className="md:col-span-2">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6"> {/* Changed from md:grid-cols-3 to lg:grid-cols-4 */}
+      <div className="lg:col-span-3"> {/* Changed from md:col-span-2 */}
         <Card className="p-4 border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
           <Canvas
             ref={canvasRef}
@@ -70,9 +70,9 @@ export const GameBoard = () => {
             isDrawing={isDrawing}
             setIsDrawing={setIsDrawing}
             onDrawStart={handleCanvasStart}
-            width={400}
-            height={300}
-            className="w-full aspect-[4/3] bg-white rounded-lg"
+            width={800} 
+            height={500}
+            className="w-full bg-white rounded-lg"
           />
         </Card>
 
@@ -88,7 +88,7 @@ export const GameBoard = () => {
           />
         </div>
       </div>
-      <div className="md:col-span-1">
+      <div className="lg:col-span-1"> {/* Changed from md:col-span-1 */}
         <Help word={state.currentWord} className="sticky top-24" />
       </div>
     </div>
