@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getRandomChallenge } from '@/lib/challenge';
+import { Challenge, generateGameChallenges, getRandomChallenge } from '@/lib/challenge';
 import { gameService } from '@/services';
 import { toast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 const GAME_DURATION = 60 * 2; // 2 minutes
 const CHALLENGE_TIME = 30; // 30 seconds per challenge
@@ -32,6 +33,8 @@ interface GameState {
   } | null;
   challengeTimeLeft: number;
   challengesCompleted: number;
+  challenges: Challenge[];
+  currentChallengeIndex: number;
 }
 
 interface GameContextType {
@@ -39,7 +42,6 @@ interface GameContextType {
   startGame: (username: string) => void;
   endGame: () => void;
   updateScore: (correct: boolean) => void;
-  setCurrentWord: () => void;
   resetGame: () => void;
   startDrawing: () => void;
   handleAttempt: (result: string, accuracy: number) => void;
@@ -69,6 +71,8 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     currentChallenge: null,
     challengeTimeLeft: CHALLENGE_TIME,
     challengesCompleted: 0,
+    challenges: [],
+    currentChallengeIndex: 0,
   });
 
   useEffect(() => {
@@ -110,6 +114,8 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
   const startGame = async (username: string) => {
     try {
       const sessionId = await gameService.startSession();
+      const gameChallenges = generateGameChallenges();
+      
       setState({
         ...state,
         username,
@@ -121,13 +127,16 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         challengesCompleted: 0,
         gameStarted: true,
         gameEnded: false,
+        challenges: gameChallenges,
+        currentChallengeIndex: 0,
         stats: {
           correctGuesses: [],
           timePerAttempt: [],
           wordHistory: [],
         }
       });
-      setCurrentWord();
+      
+      setNextChallenge();
     } catch (error) {
       console.error('Failed to start game session:', error);
       toast({
@@ -190,13 +199,20 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     }));
   };
 
-  const setCurrentWord = () => {
-    const challenge = getRandomChallenge();
-    setState(prev => ({ 
-      ...prev, 
-      currentChallenge: challenge,
-      currentWord: challenge.word 
-    }));
+  const setNextChallenge = () => {
+    setState(prev => {
+      if (prev.currentChallengeIndex >= prev.challenges.length) {
+        return prev; // Game should end
+      }
+      
+      const challenge = prev.challenges[prev.currentChallengeIndex];
+      return {
+        ...prev,
+        currentWord: challenge.word,
+        currentChallenge: challenge,
+        currentChallengeIndex: prev.currentChallengeIndex + 1,
+      };
+    });
   };
 
   const resetGame = () => {
@@ -245,7 +261,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
           challengesCompleted: prev.challengesCompleted + 1,
           challengeTimeLeft: CHALLENGE_TIME,
         }));
-        setCurrentWord();
+        setNextChallenge(); // Use the new function instead of setCurrentWord
       }
     } catch (error) {
       console.error('Failed to track attempt:', error);
@@ -263,7 +279,6 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       startGame,
       endGame,
       updateScore,
-      setCurrentWord,
       resetGame,
       startDrawing,
       handleAttempt,

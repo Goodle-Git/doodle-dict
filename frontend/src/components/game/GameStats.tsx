@@ -1,9 +1,19 @@
 import { Card } from '@/components/ui/card';
 import { useGame } from '@/contexts/GameContext';
+import { Badge } from '@/components/ui/badge';
 
 export const GameStats = () => {
   const { state } = useGame();
-  const { score, timeTaken, challengeTimeLeft, challengesCompleted, currentWord } = state;
+  const { score, timeTaken, challengeTimeLeft, challengesCompleted, currentWord, currentChallenge } = state;
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'EASY': return 'success';
+      case 'MEDIUM': return 'warning';
+      case 'HARD': return 'destructive';
+      default: return 'default';
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -28,9 +38,16 @@ export const GameStats = () => {
             </div>
           </div>
           <div className="bg-white p-4 rounded-lg border-2 border-black relative">
-            <span className="text-3xl font-bold text-center block">
-              {currentWord}
-            </span>
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-3xl font-bold">
+                {currentWord}
+              </span>
+              {currentChallenge && (
+                <Badge variant={getDifficultyColor(currentChallenge.difficulty)}>
+                  {currentChallenge.difficulty}
+                </Badge>
+              )}
+            </div>
           </div>
         </Card>
       </div>

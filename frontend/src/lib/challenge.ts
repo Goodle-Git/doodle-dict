@@ -121,3 +121,24 @@ export type DifficultyLevel = 'EASY' | 'MEDIUM' | 'HARD';
 export const getRandomChallenge = (): Challenge => {
   return DOODLE_CHALLENGES[Math.floor(Math.random() * DOODLE_CHALLENGES.length)];
 };
+
+export const generateGameChallenges = (): Challenge[] => {
+  const easy = DOODLE_CHALLENGES.filter(c => c.difficulty === 'EASY');
+  const medium = DOODLE_CHALLENGES.filter(c => c.difficulty === 'MEDIUM');
+  const hard = DOODLE_CHALLENGES.filter(c => c.difficulty === 'HARD');
+
+  // Get 5 random challenges from each difficulty
+  const getRandomItems = (arr: Challenge[], count: number) => {
+    const shuffled = [...arr].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  };
+
+  const selectedChallenges = [
+    ...getRandomItems(easy, 5),
+    ...getRandomItems(medium, 5),
+    ...getRandomItems(hard, 5)
+  ];
+
+  // Shuffle the combined array
+  return selectedChallenges.sort(() => 0.5 - Math.random());
+};

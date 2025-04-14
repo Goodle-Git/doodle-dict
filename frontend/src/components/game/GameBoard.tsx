@@ -8,7 +8,7 @@ import { gameService } from '@/services';
 import { toast } from '@/hooks/use-toast';
 
 export const GameBoard = () => {
-  const { state, handleAttempt, startDrawing, setCurrentWord } = useGame();
+  const { state, handleAttempt, startDrawing } = useGame();
   const [tool, setTool] = useState<DrawingTool>('pen');
   const [isDrawing, setIsDrawing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
