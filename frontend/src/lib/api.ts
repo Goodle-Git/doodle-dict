@@ -1,6 +1,6 @@
 import { authService } from "@/services";
 
-const baseURL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+const baseURL = import.meta.env.VITE_BACKEND_URL || '';
 
 type RequestOptions = {
   method: string;
