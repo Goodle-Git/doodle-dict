@@ -77,6 +77,7 @@ async def verify_token(token: str):
         if await is_token_blacklisted(token):
             raise HTTPException(status_code=401, detail="Token has been invalidated")
             
+        # Decode JWT token (works for both Google and email/password auth)
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         username = payload.get("sub")
         if not username:
@@ -87,7 +88,7 @@ async def verify_token(token: str):
             raise HTTPException(status_code=404, detail="User not found")
             
         return {
-            "id": user["id"],  # Added id to response
+            "id": user["id"],
             "username": user["username"],
             "email": user["email"],
             "name": user["name"]
