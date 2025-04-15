@@ -5,6 +5,7 @@ import { CustomButton } from '@/components/ui/custom-button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { authService } from '@/services/auth';  // Updated import
+import { GoogleButton } from '@/components/auth/GoogleButton';
 
 const Signup = () => {
   const [username, setUsername] = useState('');
@@ -83,6 +84,16 @@ const Signup = () => {
               Log in
             </Link>
           </p>
+        </div>
+
+        <div className="mt-6 flex items-center justify-center">
+          <div className="border-t border-gray-300 w-full"></div>
+          <span className="mx-4 text-gray-500">or</span>
+          <div className="border-t border-gray-300 w-full"></div>
+        </div>
+
+        <div className="mt-6">
+          <GoogleButton />
         </div>
       </div>
     </div>
