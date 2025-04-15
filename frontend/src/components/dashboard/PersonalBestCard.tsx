@@ -17,7 +17,29 @@ interface PersonalBestCardProps {
 
 const PersonalBestCard = ({ metrics }: PersonalBestCardProps) => {
   const formatTime = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
-  const formatDate = (dateStr: string) => format(new Date(dateStr), 'dd-MM-yyyy');
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return '-';
+    return format(new Date(dateStr), 'dd-MM-yyyy');
+  };
+
+  // Add check for empty metrics
+  if (!metrics.best_score && !metrics.fastest_correct_ms && !metrics.highest_streak) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl flex items-center gap-2">
+            <Target className="h-5 w-5 text-blue-500" />
+            Personal Best
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-center py-8">
+          <p className="text-muted-foreground">
+            Play your first game to see your personal best scores!
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

@@ -16,6 +16,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import PersonalBestCard from '@/components/dashboard/PersonalBestCard';
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { SessionsList } from '@/components/dashboard/SessionsList';
+import { EmptyState } from '@/components/dashboard/EmptyState';
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,11 @@ const DashboardContent = () => {
     return <div className="text-center text-red-500">Error loading dashboard data</div>;
   }
 
+  // Add check for no data
+  const hasNoData = !overallStats?.total_games_played && 
+                   !weeklyProgress?.length && 
+                   !recentActivities?.length;
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <DashboardNavbar />
@@ -52,6 +58,8 @@ const DashboardContent = () => {
           <TabsContent value="overview">
             {isLoading ? (
               <DashboardSkeleton />
+            ) : hasNoData ? (
+              <EmptyState />
             ) : (
               <div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
