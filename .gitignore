@@ -2,7 +2,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+# Ignore every .pyc file in every folder
+*.pyo
+*.pyc
 # Existing rules
 stable-diffusion-api/
 todo.md
