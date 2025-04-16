@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Mail } from 'lucide-react';
@@ -12,12 +11,16 @@ const Footer = () => {
           <div className="lg:col-span-2">
             <Link 
               to="/" 
-              className="flex items-center space-x-2 text-2xl font-bold font-display mb-4"
+              className="flex items-center space-x-2 text-2xl font-bold font-space-grotesk mb-4"
             >
               <div className="w-10 h-10 rounded-md bg-doodle-yellow border-2 border-black flex items-center justify-center">
-                <span className="text-black text-lg">D</span>
+                <img src="/DoodleDict.png" alt="DoodleDict Logo" className="w-6 h-6" />
               </div>
-              <span>DoodleDict</span>
+              <span className="hidden sm:inline-block">
+                <div className='w-40 h-10'>
+                  <img src="/DoodleDict-Secondary.png" alt="DoodleDict" />
+                </div>
+              </span>
             </Link>
             
             <p className="text-gray-700 mb-6 max-w-xs">
@@ -32,9 +35,9 @@ const Footer = () => {
           </p>
           
           <div className="flex items-center space-x-2 mt-4 md:mt-0">
-            <a href="mailto:contact@doodledict.com" className="text-gray-700 hover:text-black font-medium transition-colors text-sm flex items-center gap-1 border-2 border-black rounded-md px-3 py-1">
+            <a href="mailto:goodlegict@gmail.com" className="text-gray-700 hover:text-black font-medium transition-colors text-sm flex items-center gap-1 border-2 border-black rounded-md px-3 py-1">
               <Mail className="w-4 h-4" />
-              <span>contact@doodledict.com</span>
+              <span>goodlegict@gmail.com</span>
             </a>
           </div>
         </div>
