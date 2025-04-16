@@ -3,27 +3,40 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { CustomButton } from '@/components/ui/custom-button';
 import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
 import { authService } from '@/services/auth';  // Updated import
 import { GoogleButton } from '@/components/auth/GoogleButton';
+import { LoaderCircle } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 const Signup = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       const data = await authService.signup({ username, email, password, name });  // Updated auth to authService
       login(data.access_token, data.user);
-      toast.success('Account created successfully!');
+      toast({
+        title: "Account created!",
+        description: "Welcome! Your account has been created successfully.",
+        variant: "success",
+      });
       navigate('/dashboard');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Signup failed');
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Signup failed',
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -72,7 +85,10 @@ const Signup = () => {
             />
           </div>
           
-          <CustomButton type="submit" className="w-full">
+          <CustomButton type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
             Sign Up
           </CustomButton>
         </form>

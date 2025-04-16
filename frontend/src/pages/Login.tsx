@@ -3,25 +3,38 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { CustomButton } from '@/components/ui/custom-button';
 import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
 import { authService } from '@/services/auth';
 import { GoogleButton } from '@/components/auth/GoogleButton';
+import { LoaderCircle } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       const data = await authService.login({ username, password });
       login(data.access_token, data.user);
-      toast.success('Successfully logged in!');
+      toast({
+        title: "Success!",
+        description: "Welcome back! You've successfully logged in.",
+        variant: "success",
+      });
       navigate('/dashboard');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Login failed');
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Login failed',
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -51,7 +64,10 @@ const Login = () => {
             />
           </div>
           
-          <CustomButton type="submit" className="w-full">
+          <CustomButton type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
             Login
           </CustomButton>
         </form>
