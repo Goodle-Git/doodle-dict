@@ -1,10 +1,12 @@
 import { CustomButton } from '@/components/ui/custom-button';
 import DashboardNavbar from '@/components/layout/DashboardNavbar';
 import { useGame } from '@/contexts/GameContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const GameStartScreen = () => {
   const { startGame } = useGame();
-  const username = localStorage.getItem('username') || '';
+  const { user } = useAuth();
+  const username = user?.username || '';
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
