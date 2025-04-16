@@ -49,6 +49,9 @@ const DashboardNavbar = () => {
             <Link to="/profile" className="font-bold hover:text-doodle-coral">
               Profile
             </Link>
+            <Link to="/config" className="font-bold hover:text-doodle-coral">
+              Config
+            </Link>
           </div>
           <CustomButton 
             variant="primary"
