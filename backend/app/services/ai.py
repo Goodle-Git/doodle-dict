@@ -16,7 +16,27 @@ async def recognize_doodle(image_base64: str) -> dict:
         base64_image = preprocess_image(image_base64)
         model = genai.GenerativeModel("gemini-1.5-flash")
         response = model.generate_content([
-            "Identify the object in this doodle in a single word.",
+            """
+            IMPORTANT: IF THE IMAGE IS HAS TEXT OR NUMBERS, DO NOT INCLUDE THEM IN THE RESPONSE. ONLY RESPOND WITH THE DRAWING MADE IN THE IMAGE, TEXT DRAW IN THE IMAGE SHOULD NOT BE CONSIDERED.
+
+            IGNORE THE TEXT IN THE IMAGE. DO NOT READ THE TEXT ONLY READ THE DRAWING MADE IN THE IMAGE. 
+            IGNORE WHAT EVER IS WRITTEN IN THE IMAGE.
+            DO NOT RESPOND WITH THE TEXT WITTEN IN THE IMAGE. 
+
+            JUST RECOGNIZE THE DOODLE
+            Identify the (DOODLE, NOT TEXT) in this doodle in a single word.
+            
+            DO NOT RESPOND WITH THE TEXT WITTEN IN THE IMAGE.
+            DO NOT RESPOND WITH THE TEXT WITTEN IN THE IMAGE.
+            DO NOT RESPOND WITH THE TEXT WITTEN IN THE IMAGE.
+            DO NOT RESPOND WITH THE TEXT WITTEN IN THE IMAGE.
+            DO NOT RESPOND WITH THE TEXT WITTEN IN THE IMAGE.
+            DO NOT RESPOND WITH THE TEXT WITTEN IN THE IMAGE.
+
+            IF the image only have text the response should be "BLANK" and a word. 
+            IF the image have any text/letters which is not doodle then the response should be "BLANK" and a word.
+            IF the image only have text the response should be "BLANK" and a word.
+            """,
             {
                 "mime_type": "image/png",
                 "data": base64_image
