@@ -104,6 +104,7 @@ DECLARE
     current_streak integer;
     max_streak integer;
     session_score integer;
+    total_session_attempts integer;
 BEGIN
     -- Calculate current streak using a simpler approach
     WITH consecutive_correct AS (
@@ -124,16 +125,21 @@ BEGIN
         GROUP BY grp
     ) as streak_counts;
 
-    -- Get current session score
-    SELECT COUNT(*) FILTER (WHERE is_correct = true)
-    INTO session_score
+    -- Get current session statistics
+    SELECT 
+        COUNT(*) FILTER (WHERE is_correct = true),
+        COUNT(*)
+    INTO session_score, total_session_attempts
     FROM drawing_attempts
     WHERE session_id = NEW.session_id;
 
-    -- Update game session streak
+    -- Update game session statistics
     UPDATE game_sessions
-    SET streak_count = current_streak,
-        successful_attempts = session_score
+    SET 
+        streak_count = current_streak,
+        successful_attempts = session_score,
+        total_score = session_score,  -- Update total_score based on successful attempts
+        total_attempts = total_session_attempts  -- Update total_attempts
     WHERE id = NEW.session_id;
 
     -- Update user metrics

@@ -145,7 +145,6 @@ async def get_user_sessions(user_id: int, limit: int = 10, offset: int = 0):
                     gs.avg_drawing_time_ms
                 FROM game_sessions gs
                 WHERE gs.user_id = %s
-                    AND gs.end_time IS NOT NULL
                 ORDER BY gs.start_time DESC
                 LIMIT %s OFFSET %s
             """
