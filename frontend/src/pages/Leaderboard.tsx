@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { gameService } from '@/services';
 import DashboardNavbar from '@/components/layout/DashboardNavbar';
 import { useAuth } from '@/contexts/AuthContext';
+import { LeaderboardSkeleton } from '@/components/leaderboard/LeaderboardSkeleton';
 
 interface LeaderboardEntry {
   username: string;
@@ -46,9 +47,7 @@ const Leaderboard = () => {
       <div className="container mx-auto px-4 py-8 flex-1 pt-24">
         <div className="max-w-4xl mx-auto">
           {loading ? (
-            <div className="p-6 border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] bg-white text-center">
-              <h2 className="text-3xl font-bold mb-6">Loading scores...</h2>
-            </div>
+            <LeaderboardSkeleton />
           ) : error ? (
             <div className="p-6 border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] bg-white text-center">
               <h2 className="text-3xl font-bold mb-6 text-red-600">{error}</h2>
