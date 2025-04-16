@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -24,10 +23,18 @@ const Index = () => {
       <Navbar />
       
       <main className="pt-16">
-        <Hero />
-        <Features />
-        <HowItWorks />
-        <CallToAction />
+        <section id="home">
+          <Hero />
+        </section>
+        <section id="features">
+          <Features />
+        </section>
+        <section id="how-it-works">
+          <HowItWorks />
+        </section>
+        <section id="pricing">
+          <CallToAction />
+        </section>
       </main>
       
       <Footer />

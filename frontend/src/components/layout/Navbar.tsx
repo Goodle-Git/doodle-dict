@@ -23,6 +23,23 @@ const Navbar = () => {
   }, []);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  const scrollToSection = (sectionId: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const offset = 80; // Account for fixed header
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+      
+      setIsMenuOpen(false);
+    }
+  };
   
   return (
     <header 
@@ -53,10 +70,10 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8 font-space-grotesk">
-            <Link to="/" className="font-bold hover:text-doodle-coral transition-colors">Home</Link>
-            <Link to="/features" className="font-bold hover:text-doodle-coral transition-colors">Features</Link>
-            <Link to="/how-it-works" className="font-bold hover:text-doodle-coral transition-colors">How It Works</Link>
-            <Link to="/pricing" className="font-bold hover:text-doodle-coral transition-colors">Pricing</Link>
+            <a href="#home" onClick={(e) => scrollToSection('home', e)} className="font-bold hover:text-doodle-coral transition-colors">Home</a>
+            <a href="#features" onClick={(e) => scrollToSection('features', e)} className="font-bold hover:text-doodle-coral transition-colors">Features</a>
+            <a href="#how-it-works" onClick={(e) => scrollToSection('how-it-works', e)} className="font-bold hover:text-doodle-coral transition-colors">How It Works</a>
+            <a href="#pricing" onClick={(e) => scrollToSection('pricing', e)} className="font-bold hover:text-doodle-coral transition-colors">Pricing</a>
           </div>
 
           {/* CTA Buttons */}
@@ -124,34 +141,34 @@ const Navbar = () => {
             </div>
             
             <div className="flex flex-col space-y-6 text-lg">
-              <Link 
-                to="/" 
+              <a 
+                href="#home" 
                 className="py-2 border-b-2 border-black font-bold hover:text-doodle-coral transition-colors"
-                onClick={toggleMenu}
+                onClick={(e) => scrollToSection('home', e)}
               >
                 Home
-              </Link>
-              <Link 
-                to="/features" 
+              </a>
+              <a 
+                href="#features" 
                 className="py-2 border-b-2 border-black font-bold hover:text-doodle-coral transition-colors"
-                onClick={toggleMenu}
+                onClick={(e) => scrollToSection('features', e)}
               >
                 Features
-              </Link>
-              <Link 
-                to="/how-it-works" 
+              </a>
+              <a 
+                href="#how-it-works" 
                 className="py-2 border-b-2 border-black font-bold hover:text-doodle-coral transition-colors"
-                onClick={toggleMenu}
+                onClick={(e) => scrollToSection('how-it-works', e)}
               >
                 How It Works
-              </Link>
-              <Link 
-                to="/pricing" 
+              </a>
+              <a 
+                href="#pricing" 
                 className="py-2 border-b-2 border-black font-bold hover:text-doodle-coral transition-colors"
-                onClick={toggleMenu}
+                onClick={(e) => scrollToSection('pricing', e)}
               >
                 Pricing
-              </Link>
+              </a>
               <Link 
                 to="/dashboard" 
                 className="py-2 border-b-2 border-black font-bold hover:text-doodle-coral transition-colors flex items-center gap-2"
