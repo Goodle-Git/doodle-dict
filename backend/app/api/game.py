@@ -48,10 +48,10 @@ async def complete_game_session(session_id: int, session_data: GameSessionComple
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/leaderboard")
-async def get_leaderboard_endpoint():
+async def get_leaderboard_endpoint(user_id: int = None):
     try:
-        logger.debug("Fetching leaderboard data")
-        leaderboard_data = await get_leaderboard()
+        logger.debug(f"Fetching leaderboard data for user_id: {user_id}")
+        leaderboard_data = await get_leaderboard(user_id)
         logger.debug(f"Retrieved {len(leaderboard_data)} leaderboard entries")
         return {"leaderboard": leaderboard_data}
     except Exception as e:

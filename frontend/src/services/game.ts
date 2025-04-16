@@ -27,15 +27,14 @@ interface AttemptData {
   difficulty: string;
 }
 
-interface LeaderboardResponse {
-  leaderboard: Array<{
-    username: string;
-    games_played: number;
-    total_score: number;
-    total_attempts: number;
-    avg_time: number;
-    best_streak: number;
-  }>;
+interface LeaderboardEntry {
+  username: string;
+  games_played: number;
+  total_score: number;
+  total_attempts: number;
+  avg_time: number;
+  best_streak: number;
+  rank: number;
 }
 
 export const gameService = {
@@ -75,6 +74,8 @@ export const gameService = {
       recognition_accuracy: data.recognitionAccuracy,
     }),
 
-  getLeaderboard: () => 
-    api.get<LeaderboardResponse>('/api/game/leaderboard'),
+  getLeaderboard: async () => {
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    return api.get<{ leaderboard: LeaderboardEntry[] }>(`/api/game/leaderboard?user_id=${userData.id}`);
+  },
 };

@@ -151,27 +151,41 @@ async def complete_game_session(session_id: int, data: GameSessionComplete) -> i
         logger.error(f"Error in complete_game_session: {e}", exc_info=True)
         raise
 
-async def get_leaderboard():
-    query = """
+async def get_leaderboard(user_id: int = None):
+    """Get top 10 players and current user's rank if not in top 10"""
+    top_players_query = """
+        WITH rankings AS (
+            SELECT 
+                u.id,
+                u.username,
+                COUNT(DISTINCT gs.id) as games_played,
+                COALESCE(SUM(gs.total_score), 0) as total_score,
+                COALESCE(SUM(gs.total_attempts), 0) as total_attempts,
+                ROUND(AVG(gs.avg_drawing_time_ms)::numeric, 2) as avg_time,
+                MAX(gs.streak_count) as best_streak,
+                RANK() OVER (ORDER BY COALESCE(SUM(gs.total_score), 0) DESC) as rank
+            FROM users u
+            LEFT JOIN game_sessions gs ON u.id = gs.user_id
+            GROUP BY u.id, u.username
+        )
         SELECT 
-            u.username,
-            COUNT(DISTINCT gs.id) as games_played,
-            SUM(gs.total_score) as total_score,
-            SUM(gs.total_attempts) as total_attempts,
-            ROUND(AVG(gs.avg_drawing_time_ms)::numeric, 2) as avg_time,
-            MAX(gs.streak_count) as best_streak
-        FROM users u
-        LEFT JOIN game_sessions gs ON u.id = gs.user_id
-        GROUP BY u.id, u.username
-        HAVING COUNT(DISTINCT gs.id) > 0
-        ORDER BY total_score DESC
-        LIMIT 10
+            username,
+            games_played,
+            total_score,
+            total_attempts,
+            avg_time,
+            best_streak,
+            rank
+        FROM rankings
+        WHERE rank <= 10 
+        OR (id = %s AND %s IS NOT NULL)
+        ORDER BY rank ASC
     """
     
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cur:
-                cur.execute(query)
+                cur.execute(top_players_query, (user_id, user_id))
                 rows = cur.fetchall()
                 return [
                     {
@@ -180,7 +194,8 @@ async def get_leaderboard():
                         "total_score": row[2],
                         "total_attempts": row[3],
                         "avg_time": row[4],
-                        "best_streak": row[5]
+                        "best_streak": row[5],
+                        "rank": row[6]
                     }
                     for row in rows
                 ]
