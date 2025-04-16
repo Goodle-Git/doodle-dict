@@ -46,8 +46,17 @@ const PasswordChangeForm = () => {
     e.preventDefault();
     if (formData.newPassword !== formData.confirmPassword) {
       toast({
-        title: "Error",
+        title: "Validation Error",
         description: "New passwords don't match",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (formData.newPassword.length < 6) {
+      toast({
+        title: "Validation Error",
+        description: "Password must be at least 6 characters long",
         variant: "destructive"
       });
       return;
@@ -63,17 +72,28 @@ const PasswordChangeForm = () => {
       toast({
         title: "Success",
         description: "Password updated successfully",
-				variant: "success"
+        variant: "success"
       });
       setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error: any) {
+      const errorType = error.response?.data?.error_type;
+      const errorMessage = error.response?.data?.message || error.message;
+
+      let description = "Failed to update password";
+      if (errorType === "INVALID_PASSWORD") {
+        description = "Current password is incorrect";
+      } else if (errorType === "USER_NOT_FOUND") {
+        description = "User account not found";
+      }
+
       toast({
         title: "Error",
-        description: error.message || "Failed to update password",
+        description,
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (

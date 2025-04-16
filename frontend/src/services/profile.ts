@@ -20,9 +20,31 @@ export interface PasswordChangeData {
   new_password: string;
 }
 
+export class ProfileError extends Error {
+  constructor(
+    message: string,
+    public statusCode: number,
+    public errorType?: string
+  ) {
+    super(message);
+    this.name = 'ProfileError';
+  }
+}
+
 export const profileService = {
   getProfile: () => api.get<ProfileData>('/api/profile/me'),
   
-  changePassword: (data: PasswordChangeData) => 
-    api.post<{ message: string }>('/api/profile/change-password', data)
+  changePassword: async (data: { current_password: string; new_password: string }) => {
+    try {
+      const response = await api.post<{ message: string }>('/api/profile/change-password', data);
+      return response;
+    } catch (error: any) {
+      const errorData = error.response?.data;
+      throw new ProfileError(
+        errorData?.message || 'Failed to change password',
+        error.response?.status || 500,
+        errorData?.error_type
+      );
+    }
+  }
 };

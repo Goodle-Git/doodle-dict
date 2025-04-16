@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { CustomButton } from '@/components/ui/custom-button';
 import { Input } from '@/components/ui/input';
-import { authService } from '@/services/auth';
+import { authService, AuthError, AuthErrorType } from '@/services/auth';
 import { GoogleButton } from '@/components/auth/GoogleButton';
 import { LoaderCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -17,6 +17,17 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (!username || !password) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter both username and password",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const data = await authService.login({ username, password });
@@ -27,10 +38,29 @@ const Login = () => {
         variant: "success",
       });
       navigate('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
+      // Clear password field on error
+      setPassword('');
+      
+      const errorMessage = error.response?.data?.detail || error.message;
+      let title = "Login Failed";
+      let description = "An unexpected error occurred";
+
+      if (errorMessage.includes("User not found")) {
+        description = "This username doesn't exist. Please check your username or sign up.";
+      } else if (errorMessage.includes("Incorrect password")) {
+        description = "Incorrect password. Please try again.";
+      } else if (errorMessage.includes("Invalid credentials")) {
+        description = "Invalid username or password combination.";
+      } else if (error.statusCode === 401) {
+        description = "Your session has expired. Please login again.";
+      } else if (error.statusCode === 429) {
+        description = "Too many login attempts. Please try again later.";
+      }
+
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : 'Login failed',
+        title,
+        description,
         variant: "destructive",
       });
     } finally {

@@ -7,10 +7,16 @@ from app.db.queries.auth_queries import get_user, create_new_user, get_user_by_e
 async def authenticate_user(user_data):
     user = await get_user(user_data.username)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=404, 
+            detail="User not found. Please check your username."
+        )
     
     if not verify_password(user_data.password, user["password"]):
-        raise HTTPException(status_code=401, detail="Incorrect password")
+        raise HTTPException(
+            status_code=401, 
+            detail="Incorrect password. Please try again."
+        )
     
     access_token = create_access_token(
         data={"sub": user["username"]},
@@ -32,7 +38,12 @@ async def create_user(user_data):
     # Check if user exists
     existing_user = await get_user(user_data.username)
     if existing_user:
-        raise HTTPException(status_code=400, detail="Username already registered")
+        raise HTTPException(status_code=400, detail="Username is already taken")
+    
+    # Check if email exists
+    existing_email = await get_user_by_email(user_data.email)
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Email is already registered")
     
     # Hash password and create user
     hashed_password = get_password_hash(user_data.password)

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.services.auth import get_current_user
 from app.db.queries.profile_queries import get_user_profile_data, update_user_password
 from pydantic import BaseModel
+from app.db.queries.profile_queries import ProfileError
 
 router = APIRouter()
 
@@ -31,7 +32,11 @@ async def change_password(
             new_password=password_data.new_password
         )
         return {"message": "Password updated successfully"}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except ProfileError as e:
+        status_code = 404 if e.error_type == "USER_NOT_FOUND" else 400
+        raise HTTPException(
+            status_code=status_code,
+            detail={"message": str(e), "error_type": e.error_type}
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

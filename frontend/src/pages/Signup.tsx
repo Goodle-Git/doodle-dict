@@ -7,6 +7,7 @@ import { authService } from '@/services/auth';  // Updated import
 import { GoogleButton } from '@/components/auth/GoogleButton';
 import { LoaderCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { AuthError } from '@/services/auth';
 
 const Signup = () => {
   const [username, setUsername] = useState('');
@@ -19,20 +20,77 @@ const Signup = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation checks
+    if (!username || !email || !password || !name) {
+      toast({
+        title: "Validation Error",
+        description: "All fields are required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: "Validation Error",
+        description: "Password must be at least 6 characters long",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!email.includes('@') || !email.includes('.')) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (username.length < 3) {
+      toast({
+        title: "Validation Error",
+        description: "Username must be at least 3 characters long",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const data = await authService.signup({ username, email, password, name });  // Updated auth to authService
+      const data = await authService.signup({ username, email, password, name });
       login(data.access_token, data.user);
       toast({
-        title: "Account created!",
-        description: "Welcome! Your account has been created successfully.",
+        title: "Success!",
+        description: "Your account has been created successfully!",
         variant: "success",
       });
       navigate('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
+      // Clear password field on error
+      setPassword('');
+      
+      const errorMessage = error.response?.data?.detail || error.message;
+      let title = "Signup Failed";
+      let description = "An unexpected error occurred";
+
+      if (errorMessage.includes("Username is already taken")) {
+        description = "This username is already taken. Please choose another one.";
+      } else if (errorMessage.includes("Email is already registered")) {
+        description = "This email is already registered. Please use a different email or login.";
+      } else if (errorMessage.includes("Invalid username")) {
+        description = "Username can only contain letters, numbers, and underscores.";
+      } else if (errorMessage.includes("Invalid email")) {
+        description = "Please enter a valid email address.";
+      } else if (error.statusCode === 429) {
+        description = "Too many signup attempts. Please try again later.";
+      }
+
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : 'Signup failed',
+        title,
+        description,
         variant: "destructive",
       });
     } finally {
