@@ -6,13 +6,16 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_REMOVE_DELAY = 3000 // Changed from 1000000 to 3000ms
+
+type ToastVariant = "default" | "destructive" | "success"
 
 type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  variant?: ToastVariant
 }
 
 const actionTypes = {
@@ -149,10 +152,27 @@ function toast({ ...props }: Toast) {
     })
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
 
+  const getToastStyles = (variant?: ToastVariant) => {
+    switch (variant) {
+      case "success":
+        return "bg-green-50 border-2 border-green-600 text-green-900 shadow-[2px_2px_0_0_rgba(22,163,74,1)]"
+      case "destructive":
+        return "bg-red-50 border-2 border-red-600 text-red-900 shadow-[2px_2px_0_0_rgba(220,38,38,1)]"
+      default:
+        return "bg-white border-2 border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]"
+    }
+  }
+
+  const finalProps = {
+    ...props,
+    variant: props.variant as ToastVariant,
+    className: getToastStyles(props.variant as ToastVariant)
+  }
+
   dispatch({
     type: "ADD_TOAST",
     toast: {
-      ...props,
+      ...finalProps,
       id,
       open: true,
       onOpenChange: (open) => {
