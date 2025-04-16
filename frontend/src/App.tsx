@@ -15,6 +15,7 @@ import Leaderboard from "./pages/Leaderboard";
 import Game from "./pages/Game";
 import Config from "./pages/Config";
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Config />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
                   </ProtectedRoute>
                 }
               />

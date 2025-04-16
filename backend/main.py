@@ -13,7 +13,7 @@ sys.path.insert(0, str(script_dir))
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, game, users, dashboard
+from app.api import auth, game, users, dashboard, profile
 from app.core.config import settings
 from app.db.connection import init_connection_pool, close_all_connections
 
@@ -43,6 +43,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(game.router, prefix="/api/game", tags=["Game"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
+app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
 
 if __name__ == "__main__":
     import uvicorn

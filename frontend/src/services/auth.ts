@@ -31,11 +31,15 @@ interface UserResponse {
 }
 
 export const authService = {
-  login: (credentials: LoginCredentials): Promise<AuthResponse> => 
-    api.post<AuthResponse>('/api/auth/login', credentials),
+  login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
+    const response = await api.post<AuthResponse>('/api/auth/login', credentials);
+    return response;
+  },
 
-  signup: (userData: SignupData) => 
-    api.post<AuthResponse>('/api/auth/signup', userData),
+  signup: async (userData: SignupData): Promise<AuthResponse> => {
+    const response = await api.post<AuthResponse>('/api/auth/signup', userData);
+    return response;
+  },
 
   logout: async () => {
     const token = localStorage.getItem('token');
@@ -49,6 +53,8 @@ export const authService = {
     }
   },
 
-  verifyToken: () => 
-    api.get<UserResponse>('/api/auth/verify'),
+  verifyToken: async (): Promise<UserResponse> => {
+    const response = await api.get<UserResponse>('/api/auth/verify');
+    return response;
+  },
 };
