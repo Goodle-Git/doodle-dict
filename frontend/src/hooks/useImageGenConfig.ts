@@ -4,8 +4,8 @@ const DEFAULT_SD_URL = 'https://8374-34-139-188-243.ngrok-free.app/generate';
 
 export const useImageGenConfig = () => {
   const [useGemini, setUseGemini] = useState(() => {
-    const saved = localStorage.getItem('useGeminiImageGen');
-    return saved ? JSON.parse(saved) : false;
+    const saved = localStorage.getItem('useGemini');
+    return saved !== null ? JSON.parse(saved) : true; // Default to true
   });
 
   const [stableDiffusionUrl, setStableDiffusionUrl] = useState(() => {
@@ -18,7 +18,7 @@ export const useImageGenConfig = () => {
   };
 
   useEffect(() => {
-    localStorage.setItem('useGeminiImageGen', JSON.stringify(useGemini));
+    localStorage.setItem('useGemini', JSON.stringify(useGemini));
   }, [useGemini]);
 
   useEffect(() => {
