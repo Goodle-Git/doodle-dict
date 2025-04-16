@@ -10,10 +10,11 @@ class UserSignup(BaseModel):
     email: str
     name: str
 
-class PasswordReset(BaseModel):
-    email: str
-
 class Token(BaseModel):
     access_token: str
     token_type: str
     user: dict
+
+class PasswordReset(BaseModel):
+    email: str
+    newPassword: str

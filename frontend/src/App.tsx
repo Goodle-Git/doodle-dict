@@ -16,6 +16,7 @@ import Game from "./pages/Game";
 import Config from "./pages/Config";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Profile from "./pages/Profile";
+import ForgotPassword from "./pages/ForgotPassword";
 
 const queryClient = new QueryClient();
 
@@ -79,6 +80,7 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

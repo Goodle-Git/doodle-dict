@@ -10,6 +10,8 @@ from app.services.auth import (
 )
 from app.services.google_auth import handle_google_auth
 from pydantic import BaseModel
+from app.db.queries.auth_queries import reset_user_password
+from app.core.security import get_password_hash
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
@@ -35,6 +37,18 @@ async def signup(user_data: UserSignup):
 async def forgot_password(data: PasswordReset):
     try:
         return await handle_password_reset(data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/reset-password")
+async def reset_password(data: PasswordReset):
+    """Reset user password"""
+    try:
+        hashed_password = get_password_hash(data.newPassword)
+        await reset_user_password(data.email, hashed_password)
+        return {"message": "Password reset successfully"}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

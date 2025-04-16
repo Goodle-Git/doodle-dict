@@ -1,5 +1,6 @@
 from app.db.connection import get_db_connection
 from psycopg2.extras import DictCursor
+from app.schemas.auth import PasswordReset
 
 async def get_user(username: str):
     query = """
@@ -52,3 +53,14 @@ async def is_token_blacklisted(token: str) -> bool:
         with conn.cursor() as cur:
             cur.execute(query, (token,))
             return cur.fetchone()[0]
+
+async def reset_user_password(email: str, new_password: str):
+    query = "UPDATE users SET password = %s WHERE email = %s RETURNING id"
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query, (new_password, email))
+            result = cur.fetchone()
+            if not result:
+                raise ValueError("Email not found")
+            conn.commit()
+            return result[0]

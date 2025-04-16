@@ -30,6 +30,11 @@ interface UserResponse {
   id: number;
 }
 
+interface PasswordResetData {
+  email: string;
+  newPassword: string;
+}
+
 export const authService = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     const response = await api.post<AuthResponse>('/api/auth/login', credentials);
@@ -57,4 +62,7 @@ export const authService = {
     const response = await api.get<UserResponse>('/api/auth/verify');
     return response;
   },
+
+  resetPassword: (data: PasswordResetData) => 
+    api.post<{ message: string }>('/api/auth/reset-password', data),
 };
