@@ -12,7 +12,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export async function generateGeminiImage(word: string) {
   try {
-    const contents = `Create a simple black and white doodle OUTLINE drawing of a ${word}. Make it over-simplified, minimal, easy to understand, and suitable for kids to draw with a pencil.`;
+    const contents = `Create a simple black and white doodle OUTLINE drawing of a ${word}. Make it over-simplified, minimal, easy to understand, and suitable for kids to draw with a pencil. DO NOT SEND RESPOND WITH ANY TEXT ONLY IMAGE`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash-exp-image-generation",
@@ -21,11 +21,12 @@ export async function generateGeminiImage(word: string) {
         responseModalities: ["Text", "Image"],
       },
     });
+    console.log(response)
 
     for (const part of response.candidates[0].content.parts) {
       if (part.inlineData) {
         return part.inlineData.data;
-      } else if (part.text) {
+      } else {
         console.log("Received text instead of image:", part.text);
         return null;
       }
@@ -51,7 +52,7 @@ export async function generateStableDiffusionImage(word: string) {
         prompt: `Doodle outline drawing of ${word}, black and white, minimal, line drawing, simple, easy to understand and draw with a pencil for a kid.` 
       })
     });
-
+    
     const data = await response.json();
 
     if (!response.ok) {
